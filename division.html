@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive Long Division Algorithm Visualizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        #container {
+            display: flex;
+            gap: 20px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #left-column,
+        #right-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #grid-container {
+            display: grid;
+            grid-template-columns: repeat(20, 30px);
+            grid-auto-rows: 30px;
+            gap: 1px;
+            background-color: #ddd;
+            padding: 1px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 18px;
+        }
+
+        .grid-cell {
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #explanation,
+        #history {
+            width: 300px;
+            height: 150px;
+            margin-top: 20px;
+            resize: vertical;
+            font-family: monospace;
+        }
+
+        #history {
+            height: 300px;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 5px 10px;
+            font-size: 16px;
+        }
+
+        /* NEW: Added styles for the controls div */
+        #controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <div id="left-column">
+            <div>
+                Dividend: <input type="number" id="dividend" value="7425">
+                Divisor: <input type="number" id="divisor" value="15">
+                <button onclick="startDivision()">Start Division</button>
+            </div>
+            <div id="grid-container"></div>
+            <textarea id="explanation" readonly></textarea>
+            <!-- NEW: Wrapped buttons in a controls div -->
+            <div id="controls">
+                <button id="nextStep" onclick="nextStep()" style="display:none;">Next Step</button>
+                <!-- NEW: Added Subtract Row button -->
+                <button id="subtractRow" onclick="subtractRow()">Subtract Row</button>
+            </div>
+        </div>
+        <div id="right-column">
+            <textarea id="history" readonly></textarea>
+            <button id="copyHistory" onclick="copyHistory()">Copy History</button>
+        </div>
+    </div>
+
+    <script>
+        let dividend, divisor, grid, currentStep, currentIndex, currentValue, quotient;
+        let stepHistory = [];
+        let currentRow = 2;
+        // NEW: Added gridRows variable
+        let gridRows = 12; // Initial number of rows, can be adjusted
+
+        function startDivision() {
+            dividend = document.getElementById('dividend').value;
+            divisor = parseInt(document.getElementById('divisor').value);
+            console.log(dividend, "/", divisor, "=", dividend / divisor);
+            // CHANGED: Use gridRows instead of fixed 20
+            grid = Array(gridRows).fill().map(() => Array(20).fill(' '));
+            currentStep = 0;
+            currentIndex = 0;
+            currentValue = 0;
+            quotient = '';
+            stepHistory = [];
+            currentRow = 2;
+
+            // Setup initial grid
+            grid[0][0] = ' '.repeat(divisor.toString().length);
+            for (let i = 0; i < dividend.length; i++) {
+                grid[1][i + divisor.toString().length + 1] = dividend[i];
+            }
+            grid[1][divisor.toString().length] = '│';
+            grid[2][0] = divisor.toString();
+            for (let i = divisor.toString().length + 1; i < dividend.length + divisor.toString().length + 1; i++) {
+                grid[2][i] = '_';
+            }
+
+            updateGrid();
+            document.getElementById('nextStep').style.display = 'block';
+            updateExplanation("Division process initialized. Ready to begin.");
+            saveStep("Initial setup");
+        }
+
+        function nextStep() {
+            switch (currentStep) {
+                case 0:
+                    buildDividendChunk();
+                    break;
+                case 1:
+                    determinePartialQuotient();
+                    break;
+                case 2:
+                    multiply();
+                    break;
+                case 3:
+                    subtract();
+                    break;
+                case 4:
+                    bringDown();
+                    break;
+            }
+            updateGrid();
+        }
+
+        function buildDividendChunk() {
+            while (currentValue < divisor && currentIndex < dividend.length) {
+                currentValue = currentValue * 10 + parseInt(dividend[currentIndex]);
+                currentIndex++;
+            }
+            if (currentValue < divisor && currentIndex >= dividend.length) {
+                finalize();
+            } else {
+                currentStep = 1;
+            }
+            updateExplanation(`Building dividend chunk: Current value is ${currentValue}`);
+            saveStep("Build dividend chunk");
+        }
+
+        function determinePartialQuotient() {
+            let partialQuotient = Math.floor(currentValue / divisor);
+            quotient += partialQuotient;
+            grid[0][currentIndex + divisor.toString().length] = partialQuotient.toString();
+            currentStep = 2;
+            updateExplanation(`Determined partial quotient: ${partialQuotient}`);
+            saveStep("Determine partial quotient");
+        }
+
+        function multiply() {
+            let product = divisor * parseInt(quotient[quotient.length - 1]);
+            let productStr = product.toString().padStart(currentValue.toString().length, ' ');
+            currentRow++;
+            for (let i = 0; i < productStr.length; i++) {
+                grid[currentRow][i + currentIndex + divisor.toString().length - productStr.length + 1] = productStr[i];
+            }
+            currentStep = 3;
+            updateExplanation(`Multiplied divisor by partial quotient: ${divisor} * ${quotient[quotient.length - 1]} = ${product}`);
+            saveStep("Multiply");
+        }
+
+        function subtract() {
+            currentRow++;
+            for (let i = divisor.toString().length + 1; i < currentIndex + divisor.toString().length + 1; i++) {
+                grid[currentRow][i] = '-';
+            }
+            currentRow++;
+            let previousValue = currentValue; // Store the value before subtraction
+            let subtrahend = divisor * parseInt(quotient[quotient.length - 1]);
+            let difference = previousValue - subtrahend;
+            currentValue = difference;
+            let differenceStr = difference.toString().padStart(currentValue.toString().length, ' ');
+            for (let i = 0; i < differenceStr.length; i++) {
+                grid[currentRow][i + currentIndex + divisor.toString().length - differenceStr.length + 1] = differenceStr[i];
+            }
+            currentStep = 4;
+            updateExplanation(`Subtracted: ${previousValue} - ${subtrahend} = ${difference}`);
+            saveStep("Subtract");
+        }
+
+        function bringDown() {
+            if (currentIndex < dividend.length) {
+                currentValue = currentValue * 10 + parseInt(dividend[currentIndex]);
+                grid[currentRow][currentIndex + divisor.toString().length + 1] = dividend[currentIndex];
+                currentIndex++;
+                currentStep = 0;
+                updateExplanation(`Brought down next digit. New value: ${currentValue}`);
+                saveStep("Bring down");
+            } else {
+                finalize();
+            }
+        }
+
+        function finalize() {
+            if (currentValue !== 0) {
+                let remainderStr = currentValue.toString();
+                for (let i = 0; i < remainderStr.length; i++) {
+                    grid[currentRow][i + (dividend.length + divisor.toString().length - remainderStr.length + 1)] = remainderStr[i];
+                }
+                updateExplanation(`Division complete. Remainder: ${currentValue}`);
+            } else {
+                updateExplanation(`Division complete. No remainder.`);
+            }
+            document.getElementById('nextStep').style.display = 'none';
+            saveStep("Finalize");
+        }
+
+        function updateGrid() {
+            const gridContainer = document.getElementById('grid-container');
+            gridContainer.innerHTML = '';
+            // CHANGED: Use gridRows instead of grid.length
+            for (let i = 0; i < gridRows; i++) {
+                for (let j = 0; j < grid[i].length; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.textContent = grid[i][j];
+                    gridContainer.appendChild(cell);
+                }
+            }
+        }
+
+        function updateExplanation(text) {
+            document.getElementById('explanation').value = text;
+        }
+
+        // CHANGED: Updated saveStep function to include explanation
+        function saveStep(stepName) {
+            let stepText = `Step ${stepHistory.length + 1}: ${stepName}\n`;
+            stepText += document.getElementById('explanation').value + "\n\n";
+            // CHANGED: Use gridRows instead of grid.length
+            for (let i = 0; i < gridRows; i++) {
+                stepText += grid[i].join('') + '\n';
+            }
+            stepText += '\n';
+            stepHistory.push(stepText);
+            document.getElementById('history').value = stepHistory.join('');
+        }
+
+        function copyHistory() {
+            const history = document.getElementById('history');
+            history.select();
+            document.execCommand('copy');
+            alert('History copied to clipboard');
+        }
+
+        // NEW: Added subtractRow function
+        function subtractRow() {
+            if (gridRows > 5) { // Ensure we don't remove essential rows
+                gridRows--;
+                grid.pop();
+                updateGrid();
+                saveStep("Subtracted a row");
+            } else {
+                alert("Cannot remove more rows. Minimum grid size reached.");
+            }
+        }
+    </script>
+</body>
+
+</html>
