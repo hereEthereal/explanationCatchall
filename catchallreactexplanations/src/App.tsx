@@ -7,6 +7,7 @@ import GridTool from "./projects/GridTool";
 import { LongFormSubtraction } from "./projects/LongFormSubtraction";
 import LongFormAddition from "./projects/LongFormAddition";
 import DraggableQuadrilateral from "./projects/DraggableQuadrilateral";
+import TrigCircleVisualization from "./projects/AtanTangentTrig";
 import path from "path";
 
 const projectList = [
@@ -32,6 +33,11 @@ const projectList = [
     name: "Draggable Quadrilateral",
     path: "/draggable-quadrilateral",
     element: <DraggableQuadrilateral />,
+  },
+  {
+    name: "Trig Visualization",
+    path: "/trig-visualization",
+    element: <TrigCircleVisualization />,
   }
 ];
 

@@ -66,17 +66,19 @@ const DraggableQuadrilateral: React.FC = () => {
   const svgRef = useRef<SVGSVGElement>(null);
 
   const calculateAngle = (p1: Point, p2: Point, p3: Point): number => {
-    const vector1 = { x: p1.x - p2.x, y: p1.y - p2.y };
-    const vector2 = { x: p3.x - p2.x, y: p3.y - p2.y };
+    const v1 = { x: p1.x - p2.x, y: p1.y - p2.y };
+    const v2 = { x: p3.x - p2.x, y: p3.y - p2.y };
     
-    const dotProduct = vector1.x * vector2.x + vector1.y * vector2.y;
-    const magnitude1 = Math.sqrt(vector1.x * vector1.x + vector1.y * vector1.y);
-    const magnitude2 = Math.sqrt(vector2.x * vector2.x + vector2.y * vector2.y);
+    const dot = v1.x * v2.x + v1.y * v2.y;
+    const det = v1.x * v2.y - v1.y * v2.x;
+    const angle = Math.atan2(det, dot);
     
-    const cosAngle = dotProduct / (magnitude1 * magnitude2);
-    const angle = Math.acos(Math.min(Math.max(cosAngle, -1), 1));
+    // Convert to degrees and ensure it's positive
+    let degrees = (angle * 180) / Math.PI;
+    if (degrees < 0) degrees += 360;
     
-    return (angle * 180) / Math.PI;
+    // Return the interior angle
+    return 360 - degrees;
   };
 
   const calculateAngles = () => {
@@ -90,7 +92,7 @@ const DraggableQuadrilateral: React.FC = () => {
 
     const totalAngle = newAngles.reduce((sum, angle) => sum + angle, 0);
     if (Math.abs(totalAngle - 360) > 0.1) {
-      setError(`Invalid quadrilateral: Total angle is ${totalAngle.toFixed(2)}°, expected 360°`);
+      setError(`Warning: Total angle is ${totalAngle.toFixed(2)}°, expected 360°`);
     } else {
       setError(null);
     }
@@ -154,14 +156,14 @@ const DraggableQuadrilateral: React.FC = () => {
         <Alert>
           <AlertTitle>
             <AlertCircle size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />
-            Error
+            Warning
           </AlertTitle>
           <p>{error}</p>
         </Alert>
       )}
       <FormulaContainer>
         <FormulaTitle>Angle Calculation Formula:</FormulaTitle>
-        <p>angle = arccos((v1 · v2) / (|v1| * |v2|))</p>
+        <p>angle = 360° - atan2(det(v1, v2), dot(v1, v2)) * (180 / π)</p>
         <p>where v1 and v2 are vectors formed by three consecutive points</p>
       </FormulaContainer>
     </Container>
