@@ -3,12 +3,14 @@ import { BrowserRouter as Router, Route, Link, Routes } from 'react-router-dom';
 import AppA from './projects/AppA';
 import AppB from './projects/AppB';
 import SquareRootB from './projects/SquareRootB';
+import GridTool from './projects/GridTool';
 
 const projectList = [
   { name: 'App A', path: '/app-a', element: <AppA /> },
   { name: 'App B', path: '/app-b', element: <AppB /> },
   { name: 'Babylonian Method Square Visualizer', path: '/square-root', element: <SquareRootB /> },
-];
+  { name: 'Grid Tool', path: '/grid-tool', element: <GridTool /> },
+];  
 
 const Home: React.FC = () => (
   <div>
