@@ -95,8 +95,8 @@ const LongFormAddition: React.FC = () => {
     const num1Str = number1.toString().padStart(4, '0');
     const num2Str = number2.toString().padStart(4, '0');
     setGrid(prev => prev.map((row, i) => {
-      if (i === 2) return row.map((cell, j) => j > 0 ? num1Str[j-1] : cell);
-      if (i === 3) return row.map((cell, j) => j > 0 ? num2Str[j-1] : cell);
+      if (i === 2) return row.map((cell, j) => j > 0 ? num1Str[4-j] : cell);
+      if (i === 3) return row.map((cell, j) => j > 0 ? num2Str[4-j] : cell);
       return row;
     }));
     setMaxSteps(4);
@@ -119,7 +119,7 @@ const LongFormAddition: React.FC = () => {
     }
     
     setGrid(prev => {
-      const newGrid = [...prev.map(row => [...row])];
+      const newGrid = [...prev];
       newGrid[4][col] = sum.toString();
       if (col > 1) {
         newGrid[1][col-1] = newCarry.toString();
@@ -144,7 +144,7 @@ const LongFormAddition: React.FC = () => {
   };
 
   const updateExplanation = (col: number, num1: number, num2: number, carry: number, sum: number, newCarry: number) => {
-    const placeValue = ['ones', 'tens', 'hundreds', 'thousands'][4 - col];
+    const placeValue = ['ones', 'tens', 'hundreds', 'thousands'][3 - col];
     let explanation = `Step ${currentStep + 1}: Adding ${placeValue}<br>`;
     explanation += `${num1} + ${num2} + ${carry} (carry) = ${sum + newCarry * 10}<br>`;
     if (newCarry) {
@@ -193,12 +193,6 @@ const LongFormAddition: React.FC = () => {
     setExplanation('');
   };
 
-  const randomize = () => {
-    const randomFourDigitNumber = () => Math.floor(100 + Math.random() * 900);
-    setNumber1(randomFourDigitNumber());
-    setNumber2(randomFourDigitNumber());
-  };
-
   return (
     <AppContainer>
       <h1>Long-Form Addition Explainer</h1>
@@ -214,7 +208,6 @@ const LongFormAddition: React.FC = () => {
       <ControlsContainer>
         <Input type="number" value={number1} onChange={(e) => setNumber1(Number(e.target.value))} placeholder="First number" />
         <Input type="number" value={number2} onChange={(e) => setNumber2(Number(e.target.value))} placeholder="Second number" />
-        <Button onClick={randomize}>Randomize</Button>
         <Button onClick={start}>Start</Button>
         <Button onClick={step}>Step</Button>
         <Button onClick={reset}>Reset</Button>
