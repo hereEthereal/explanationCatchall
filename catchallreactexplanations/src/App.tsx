@@ -6,6 +6,8 @@ import SquareRootB from "./projects/SquareRootB";
 import GridTool from "./projects/GridTool";
 import { LongFormSubtraction } from "./projects/LongFormSubtraction";
 import LongFormAddition from "./projects/LongFormAddition";
+import DraggableQuadrilateral from "./projects/DraggableQuadrilateral";
+import path from "path";
 
 const projectList = [
   { name: "App A", path: "/app-a", element: <AppA /> },
@@ -25,6 +27,11 @@ const projectList = [
     name: "Long Form Addition",
     path: "/long-form-addition",
     element: <LongFormAddition />,
+  },
+  {
+    name: "Draggable Quadrilateral",
+    path: "/draggable-quadrilateral",
+    element: <DraggableQuadrilateral />,
   }
 ];
 
