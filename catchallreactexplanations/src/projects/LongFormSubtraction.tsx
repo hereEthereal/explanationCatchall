@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
-
-// Styled components
+import styled, { keyframes, css } from 'styled-components';
 const Container = styled.div`
   font-family: Arial, sans-serif;
   display: flex;
@@ -49,28 +47,95 @@ const Grid = styled.div`
   margin-top: 20px;
 `;
 
-const Cell = styled.div`
-  width: 30px;
-  height: 30px;
-  background-color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 14px;
+const shake = keyframes`
+  0% { transform: translateX(0); }
+  25% { transform: translateX(5px); }
+  50% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+  100% { transform: translateX(0); }
 `;
 
+const wiggle = keyframes`
+  0% { transform: translateY(0); }
+  25% { transform: translateY(-5px); }
+  75% { transform: translateY(5px); }
+  100% { transform: translateY(0); }
+`;
+
+const thinking = keyframes`
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+`;
+
+const moveRight = keyframes`
+  0% { transform: translateX(0); }
+  100% { transform: translateX(30px); }
+`;
+
+const AnimatedCell = styled.div<{ 
+    animate: 'shake' | 'wiggle' | 'none';
+    isRed: boolean;
+    isBlue: boolean;
+    isYellow: boolean;
+    isBorrowing: boolean;
+  }>`
+    width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
+    ${props => {
+      switch(props.animate) {
+        case 'shake':
+          return css`animation: ${shake} 0.5s;`;
+        case 'wiggle':
+          return css`animation: ${wiggle} 0.5s;`;
+        default:
+          return 'animation: none;';
+      }
+    }}
+    background-color: ${props => {
+      if (props.isRed) return '#ffcccc';
+      if (props.isBlue) return '#ccccff';
+      if (props.isYellow) return '#ffffcc';
+      return 'white';
+    }};
+    transition: background-color 0.3s;
+    position: relative;
+  
+    ${props => props.isBorrowing && css`
+      &::after {
+        content: '1';
+        position: absolute;
+        top: -15px;
+        right: -15px;
+        font-size: 12px;
+        animation: ${moveRight} 0.5s forwards;
+      }
+    `}
+  `;
+  
 const Explanation = styled.div`
   margin-top: 20px;
   max-width: 400px;
   text-align: center;
 `;
 
-// Types
+const ThinkingDot = styled.span<{ delay: number }>`
+  animation: ${thinking} 1s infinite;
+  animation-delay: ${props => props.delay}s;
+`;
+
+const ThinkingContainer = styled.div`
+  font-size: 24px;
+  margin-top: 10px;
+`;
+
 interface GridState {
   [key: number]: string[];
 }
 
-// LongFormSubtraction component
 export const LongFormSubtraction: React.FC = () => {
   const [number1, setNumber1] = useState<number>(0);
   const [number2, setNumber2] = useState<number>(0);
@@ -78,9 +143,13 @@ export const LongFormSubtraction: React.FC = () => {
   const [gridState, setGridState] = useState<GridState>({});
   const [explanation, setExplanation] = useState<string>('');
   const [isStarted, setIsStarted] = useState<boolean>(false);
-  const [isBorrowing, setIsBorrowing] = useState<boolean>(false);
-  const [borrowFrom, setBorrowFrom] = useState<number>(-1);
   const [isComplete, setIsComplete] = useState<boolean>(false);
+  const [animateCells, setAnimateCells] = useState<{ [key: string]: 'shake' | 'wiggle' | 'none' }>({});
+  const [highlightCells, setHighlightCells] = useState<{ [key: string]: 'red' | 'blue' | 'yellow' | 'none' }>({});
+  const [showMinus, setShowMinus] = useState<boolean>(false);
+  const [isThinking, setIsThinking] = useState<boolean>(false);
+  const [borrowingFrom, setBorrowingFrom] = useState<number | null>(null);
+  const [borrowingTo, setBorrowingTo] = useState<number | null>(null);
 
   const maxDigits = 7;
 
@@ -101,7 +170,8 @@ export const LongFormSubtraction: React.FC = () => {
       alert('Please enter valid numbers. Number 1 should be greater than Number 2.');
       return;
     }
-
+    console.log('Starting subtraction...');
+    console.log(`Number 1 - number2: ${number1} - ${number2} = ${number1 - number2}`);
     setCurrentStep(0);
     setIsComplete(false);
     initializeGrid();
@@ -124,8 +194,102 @@ export const LongFormSubtraction: React.FC = () => {
     });
   };
 
+  const animateStep = async (column: number) => {
+    // Highlight and wiggle the current column
+    setAnimateCells({
+      [`2-${column}`]: 'wiggle',
+      [`3-${column}`]: 'wiggle'
+    });
+    setHighlightCells({
+      [`2-${column}`]: 'blue',
+      [`3-${column}`]: 'blue'
+    });
+    await new Promise(resolve => setTimeout(resolve, 150));
 
-  const step = () => {
+    // Show minus sign
+    setShowMinus(true);
+    await new Promise(resolve => setTimeout(resolve, 150));
+
+    // Start "thinking" animation
+    setIsThinking(true);
+    await new Promise(resolve => setTimeout(resolve, 150));
+
+    // Stop "thinking" animation
+    setIsThinking(false);
+
+    // Perform subtraction
+    let upperDigit = parseInt(gridState[2][column]);
+    const lowerDigit = parseInt(gridState[3][column]);
+
+    if (upperDigit < lowerDigit) {
+      // Shake and turn red if borrowing is needed
+      setAnimateCells({
+        [`2-${column}`]: 'shake',
+        [`3-${column}`]: 'shake'
+      });
+      setHighlightCells({
+        [`2-${column}`]: 'red',
+        [`3-${column}`]: 'red'
+      });
+      await new Promise(resolve => setTimeout(resolve, 400));
+
+      // Perform borrowing
+      let newBorrowFrom = column - 1;
+      const newGridState = { ...gridState };
+      while (newBorrowFrom > 0 && newGridState[2][newBorrowFrom] === '0') {
+        newGridState[2][newBorrowFrom] = '9';
+        newBorrowFrom--;
+      }
+      if (newBorrowFrom > 0) {
+        // Highlight the cell we're borrowing from
+        setHighlightCells(prev => ({
+          ...prev,
+          [`2-${newBorrowFrom}`]: 'yellow'
+        }));
+        await new Promise(resolve => setTimeout(resolve, 400));
+
+        // Decrement the borrowed-from cell
+        const originalValue = parseInt(newGridState[2][newBorrowFrom]);
+        newGridState[2][newBorrowFrom] = (originalValue - 1).toString();
+        setGridState(newGridState);
+        await new Promise(resolve => setTimeout(resolve, 400));
+
+        // Animate the borrowing
+        setBorrowingFrom(newBorrowFrom);
+        setBorrowingTo(column);
+        await new Promise(resolve => setTimeout(resolve, 400));
+
+        // Update the borrowing column
+        newGridState[1][column] = '1';
+        setGridState(newGridState);
+        setExplanation(`Borrowing 10 from the ${getPositionName(currentStep - 1)} column for the ${getPositionName(currentStep)} column.`);
+        upperDigit += 10;
+
+        // Reset borrowing animation
+        setBorrowingFrom(null);
+        setBorrowingTo(null);
+      }
+    }
+
+    // Perform subtraction and update grid
+    const result = upperDigit - lowerDigit;
+    setGridState(prevState => ({
+      ...prevState,
+      4: {
+        ...prevState[4],
+        [column]: result.toString()
+      }
+    }));
+    setExplanation(`Subtracting ${lowerDigit} from ${upperDigit} in the ${getPositionName(currentStep)} column. Result: ${result}`);
+
+    // Reset animations and highlights
+    setAnimateCells({});
+    setHighlightCells({});
+    setShowMinus(false);
+    setCurrentStep(prevStep => prevStep + 1);
+  };
+
+  const step = async () => {
     if (isComplete) {
       return;
     }
@@ -143,50 +307,8 @@ export const LongFormSubtraction: React.FC = () => {
       return;
     }
 
-    let upperDigit = parseInt(gridState[2][currentColumn]);
-    const lowerDigit = parseInt(gridState[3][currentColumn]);
-
-    if (isBorrowing) {
-      const result = (upperDigit + 10) - lowerDigit;
-      setGridState(prevState => ({
-        ...prevState,
-        4: {
-          ...prevState[4],
-          [currentColumn]: result.toString()
-        }
-      }));
-      setExplanation(`Step ${currentStep + 1}: Subtracting ${lowerDigit} from ${upperDigit + 10} in the ${getPositionName(currentStep)} column. Result: ${result}`);
-      setIsBorrowing(false);
-      setCurrentStep(prevStep => prevStep + 1);
-    } else if (upperDigit < lowerDigit) {
-      let newBorrowFrom = currentColumn - 1;
-      const newGridState = { ...gridState };
-      while (newBorrowFrom > 0 && newGridState[2][newBorrowFrom] === '0') {
-        newGridState[2][newBorrowFrom] = '9';
-        newBorrowFrom--;
-      }
-      if (newBorrowFrom > 0) {
-        newGridState[2][newBorrowFrom] = (parseInt(newGridState[2][newBorrowFrom]) - 1).toString();
-        newGridState[1][currentColumn] = '1';
-        setGridState(newGridState);
-        setBorrowFrom(newBorrowFrom);
-        setExplanation(`Step ${currentStep + 1}: Borrowing 10 from the ${getPositionName(currentStep - 1)} column for the ${getPositionName(currentStep)} column.`);
-        setIsBorrowing(true);
-      }
-    } else {
-      const result = upperDigit - lowerDigit;
-      setGridState(prevState => ({
-        ...prevState,
-        4: {
-          ...prevState[4],
-          [currentColumn]: result.toString()
-        }
-      }));
-      setExplanation(`Step ${currentStep + 1}: Subtracting ${lowerDigit} from ${upperDigit} in the ${getPositionName(currentStep)} column. Result: ${result}`);
-      setCurrentStep(prevStep => prevStep + 1);
-    }
+    await animateStep(currentColumn);
   };
-
 
   const getPositionName = (step: number): string => {
     const positions = ['ones', 'tens', 'hundreds', 'thousands', 'ten thousands', 'hundred thousands', 'millions'];
@@ -199,10 +321,14 @@ export const LongFormSubtraction: React.FC = () => {
     setNumber2(0);
     setCurrentStep(0);
     setIsStarted(false);
-    setIsBorrowing(false);
-    setBorrowFrom(-1);
     setExplanation('');
     setIsComplete(false);
+    setAnimateCells({});
+    setHighlightCells({});
+    setShowMinus(false);
+    setIsThinking(false);
+    setBorrowingFrom(null);
+    setBorrowingTo(null);
   };
 
   const randomize = () => {
@@ -246,12 +372,27 @@ export const LongFormSubtraction: React.FC = () => {
       <Grid>
         {[0, 1, 2, 3, 4, 5, 6].map(row =>
           [0, 1, 2, 3, 4, 5, 6, 7].map(col => (
-            <Cell key={`${row}-${col}`}>
+            <AnimatedCell
+              key={`${row}-${col}`}
+              animate={animateCells[`${row}-${col}`] || 'none'}
+              isRed={highlightCells[`${row}-${col}`] === 'red'}
+              isBlue={highlightCells[`${row}-${col}`] === 'blue'}
+              isYellow={highlightCells[`${row}-${col}`] === 'yellow'}
+              isBorrowing={borrowingFrom === col && row === 2}
+            >
+              {row === 3 && col === maxDigits - currentStep && showMinus ? '-' : ''}
               {gridState[row] && gridState[row][col] ? gridState[row][col] : ''}
-            </Cell>
+            </AnimatedCell>
           ))
         )}
       </Grid>
+      {isThinking && (
+        <ThinkingContainer>
+          <ThinkingDot delay={0}>.</ThinkingDot>
+          <ThinkingDot delay={0.2}>.</ThinkingDot>
+          <ThinkingDot delay={0.4}>.</ThinkingDot>
+        </ThinkingContainer>
+      )}
       <Explanation>{explanation}</Explanation>
     </Container>
   );

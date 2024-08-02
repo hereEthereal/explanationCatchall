@@ -4,7 +4,7 @@ import AppA from './projects/AppA';
 import AppB from './projects/AppB';
 import SquareRootB from './projects/SquareRootB';
 import GridTool from './projects/GridTool';
-import { LongFormSubtraction } from './projects/LongFormSubtraction';
+import {LongFormSubtraction}  from './projects/LongFormSubtraction';
 
 
 const projectList = [
