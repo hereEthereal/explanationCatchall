@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Matter from 'matter-js';
 
 const ShapeContainer = () => {
@@ -6,6 +6,8 @@ const ShapeContainer = () => {
   const engineRef = useRef(null);
   const renderRef = useRef(null);
   const [selectedShape, setSelectedShape] = useState('star');
+  const [spawnArea, setSpawnArea] = useState(null);
+  const [setSpawnAreaMode, setSetSpawnAreaMode] = useState(false);
 
   const shapes = {
     rectangle: 'M -100 -75 L 100 -75 L 100 75 L -100 75 Z',
@@ -16,17 +18,11 @@ const ShapeContainer = () => {
   };
 
   useEffect(() => {
-    console.log('Component mounted');
-    if (!sceneRef.current) {
-      console.error('Scene ref is null');
-      return;
-    }
+    if (!sceneRef.current) return;
 
-    console.log('Creating engine');
     const engine = Matter.Engine.create({ gravity: { x: 0, y: 1, scale: 0.001 } });
     engineRef.current = engine;
 
-    console.log('Creating renderer');
     const render = Matter.Render.create({
       element: sceneRef.current,
       engine: engine,
@@ -39,37 +35,25 @@ const ShapeContainer = () => {
     });
     renderRef.current = render;
 
-    console.log('Running renderer');
     Matter.Render.run(render);
 
-    console.log('Creating runner');
     const runner = Matter.Runner.create();
     Matter.Runner.run(runner, engine);
 
-    console.log('Adding click event listener');
-    render.canvas.addEventListener('click', handleClick);
-
-    console.log('Creating initial shape');
     const shape = createShape(selectedShape);
     Matter.World.add(engine.world, shape);
 
     return () => {
-      console.log('Cleaning up');
       Matter.Render.stop(render);
       Matter.Runner.stop(runner);
       Matter.Engine.clear(engine);
-      render.canvas.removeEventListener('click', handleClick);
     };
   }, []);
 
   useEffect(() => {
-    console.log('Selected shape changed:', selectedShape);
-    if (!engineRef.current) {
-      console.error('Engine ref is null');
-      return;
-    }
+    if (!engineRef.current) return;
     const engine = engineRef.current;
-    const bodies = engine.world.bodies.filter(body => body.isStatic);
+    const bodies = engine.world.bodies.filter(body => body.isStatic && body.label !== 'spawnAreaMarker');
     Matter.World.remove(engine.world, bodies);
 
     const shape = createShape(selectedShape);
@@ -79,14 +63,12 @@ const ShapeContainer = () => {
   }, [selectedShape]);
 
   const createShape = (shapeType) => {
-    console.log('Creating shape:', shapeType);
     const centerX = 400;
     const centerY = 300;
     const scale = 1.5;
 
     const path = shapes[shapeType];
     if (!path) {
-      console.warn('No path found for shape type:', shapeType);
       return [Matter.Bodies.rectangle(centerX, centerY, 200, 150, { isStatic: true })];
     }
 
@@ -126,19 +108,47 @@ const ShapeContainer = () => {
     }
   };
 
-  const handleClick = (event) => {
-    console.log('Click event triggered');
-    if (!engineRef.current || !renderRef.current) {
-      console.error('Engine or render ref is null in click handler');
-      return;
-    }
+  const handleClick = useCallback((event) => {
+    if (!engineRef.current || !renderRef.current) return;
+
     const engine = engineRef.current;
     const render = renderRef.current;
     const rect = render.canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
 
-    console.log('Creating ball at:', x, y);
+    if (setSpawnAreaMode) {
+      setSpawnArea({ x, y });
+      setSetSpawnAreaMode(false);
+
+      // Remove existing spawn area marker
+      const existingMarkers = engine.world.bodies.filter(body => body.label === 'spawnAreaMarker');
+      Matter.World.remove(engine.world, existingMarkers);
+
+      // Create new spawn area marker
+      const spawnAreaMarker = Matter.Bodies.circle(x, y, 10, {
+        isStatic: true,
+        label: 'spawnAreaMarker',
+        render: { fillStyle: '#FF0000' }
+      });
+      Matter.World.add(engine.world, spawnAreaMarker);
+    } else if (spawnArea) {
+      spawnBall(x, y);
+    }
+  }, [setSpawnAreaMode, spawnArea]);
+
+  useEffect(() => {
+    const canvas = renderRef.current?.canvas;
+    if (canvas) {
+      canvas.addEventListener('click', handleClick);
+      return () => canvas.removeEventListener('click', handleClick);
+    }
+  }, [handleClick]);
+
+  const spawnBall = (x, y) => {
+    if (!engineRef.current) return;
+    const engine = engineRef.current;
+
     const ball = Matter.Bodies.circle(x, y, 10, {
       restitution: 0.8,
       friction: 0.005,
@@ -149,7 +159,36 @@ const ShapeContainer = () => {
     });
 
     Matter.World.add(engine.world, ball);
-    console.log('Ball added to world');
+  };
+
+  const toggleSetSpawnArea = () => {
+    setSetSpawnAreaMode(prev => !prev);
+    if (spawnArea) {
+      setSpawnArea(null);
+      if (engineRef.current) {
+        const markers = engineRef.current.world.bodies.filter(body => body.label === 'spawnAreaMarker');
+        Matter.World.remove(engineRef.current.world, markers);
+      }
+    }
+  };
+
+  const spawnBalls = () => {
+    if (!engineRef.current || !spawnArea) return;
+
+    for (let i = 0; i < 5; i++) {
+      const ball = Matter.Bodies.circle(
+        spawnArea.x + (Math.random() - 0.5) * 20,
+        spawnArea.y,
+        10,
+        {
+          restitution: 0.8,
+          friction: 0.005,
+          density: 0.001,
+          render: { fillStyle: '#4CAF50' }
+        }
+      );
+      Matter.World.add(engineRef.current.world, ball);
+    }
   };
 
   return (
@@ -161,8 +200,19 @@ const ShapeContainer = () => {
         <button onClick={() => setSelectedShape('shamrock')}>Shamrock</button>
         <button onClick={() => setSelectedShape('heart')}>Heart</button>
         <button onClick={handleCustomShape}>Custom Shape</button>
+        <button onClick={toggleSetSpawnArea} style={{backgroundColor: setSpawnAreaMode ? 'lightblue' : 'white'}}>
+          {setSpawnAreaMode ? 'Cancel Set Spawn Area' : 'Set Spawn Area'}
+        </button>
+        <button onClick={spawnBalls} disabled={!spawnArea}>Spawn Balls</button>
       </div>
-      <p>Click inside or outside the shape to spawn balls!</p>
+      <p>
+        {setSpawnAreaMode 
+          ? "Click to set the spawn area" 
+          : spawnArea
+            ? "Click to spawn individual balls, or use 'Spawn Balls' to spawn multiple"
+            : "Set a spawn area to start spawning balls"}
+      </p>
+      {spawnArea && <p>Spawn area set at x: {spawnArea.x.toFixed(2)}, y: {spawnArea.y.toFixed(2)}</p>}
     </div>
   );
 };
