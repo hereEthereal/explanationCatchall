@@ -3,10 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@react-three/drei": "^9.109.2",
+    "@react-three/fiber": "^8.16.8",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "@types/jest": "^27.5.2",
+    "@types/matter-js": "^0.19.7",
     "@types/node": "^16.18.104",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
@@ -14,6 +17,7 @@
     "@types/recharts": "^1.8.29",
     "components": "^0.1.0",
     "lucide-react": "^0.424.0",
+    "matter-js": "^0.20.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-konva": "^18.2.10",
@@ -21,6 +25,7 @@
     "react-scripts": "5.0.1",
     "recharts": "^2.12.7",
     "styled-components": "^6.1.12",
+    "three": "^0.167.1",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
   },
@@ -47,5 +52,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@types/three": "^0.167.1"
   }
 }

@@ -8,6 +8,7 @@ import { LongFormSubtraction } from "./projects/LongFormSubtraction";
 import LongFormAddition from "./projects/LongFormAddition";
 import DraggableQuadrilateral from "./projects/DraggableQuadrilateral";
 import TrigCircleVisualization from "./projects/AtanTangentTrig";
+import ShapeContainer from './projects/VolumeEstimate';
 import path from "path";
 
 const projectList = [
@@ -38,6 +39,12 @@ const projectList = [
     name: "Trig Visualization",
     path: "/trig-visualization",
     element: <TrigCircleVisualization />,
+  }
+  ,
+  {
+    name: "Volume Approximation",
+    path: "/volume-approximation",
+    element: <ShapeContainer />,
   }
 ];
 
