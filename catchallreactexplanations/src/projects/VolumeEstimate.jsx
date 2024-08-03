@@ -8,6 +8,13 @@ const ShapeContainer = () => {
   const [selectedShape, setSelectedShape] = useState('star');
   const [spawnArea, setSpawnArea] = useState(null);
   const [setSpawnAreaMode, setSetSpawnAreaMode] = useState(false);
+  const [isContainerFull, setIsContainerFull] = useState(false);
+  const ballsRef = useRef([]);
+  const [ballCount, setBallCount] = useState(0);
+  const [isCounting, setIsCounting] = useState(false);
+  const [countSpeed, setCountSpeed] = useState(1000); // 1 second default
+  const [isFrozen, setIsFrozen] = useState(false);
+  const [visibleBalls, setVisibleBalls] = useState([]);
 
   const shapes = {
     rectangle: 'M -100 -75 L 100 -75 L 100 75 L -100 75 Z',
@@ -121,11 +128,9 @@ const ShapeContainer = () => {
       setSpawnArea({ x, y });
       setSetSpawnAreaMode(false);
 
-      // Remove existing spawn area marker
       const existingMarkers = engine.world.bodies.filter(body => body.label === 'spawnAreaMarker');
       Matter.World.remove(engine.world, existingMarkers);
 
-      // Create new spawn area marker
       const spawnAreaMarker = Matter.Bodies.circle(x, y, 10, {
         isStatic: true,
         label: 'spawnAreaMarker',
@@ -145,6 +150,38 @@ const ShapeContainer = () => {
     }
   }, [handleClick]);
 
+  const checkContainerFullness = useCallback(() => {
+    if (!spawnArea || !engineRef.current) return;
+
+    const engine = engineRef.current;
+    const spawnAreaBody = engine.world.bodies.find(body => body.label === 'spawnAreaMarker');
+    if (!spawnAreaBody) return;
+
+    const balls = ballsRef.current;
+    let contactCount = 0;
+    let totalContactAngle = 0;
+
+    balls.forEach(ball => {
+      const collision = Matter.Collision.collides(spawnAreaBody, ball);
+      if (collision) {
+        contactCount++;
+        const contactPoint = collision.supports[0];
+        const contactAngle = Math.atan2(contactPoint.y - spawnAreaBody.position.y, contactPoint.x - spawnAreaBody.position.x);
+        totalContactAngle += Math.abs(contactAngle);
+      }
+    });
+
+    const coveragePercentage = (totalContactAngle / (2 * Math.PI)) * 100;
+    const isFull = contactCount >= 5 && coveragePercentage >= 50;
+
+    setIsContainerFull(isFull);
+  }, [spawnArea]);
+
+  useEffect(() => {
+    const intervalId = setInterval(checkContainerFullness, 100);
+    return () => clearInterval(intervalId);
+  }, [checkContainerFullness]);
+
   const spawnBall = (x, y) => {
     if (!engineRef.current) return;
     const engine = engineRef.current;
@@ -159,17 +196,8 @@ const ShapeContainer = () => {
     });
 
     Matter.World.add(engine.world, ball);
-  };
-
-  const toggleSetSpawnArea = () => {
-    setSetSpawnAreaMode(prev => !prev);
-    if (spawnArea) {
-      setSpawnArea(null);
-      if (engineRef.current) {
-        const markers = engineRef.current.world.bodies.filter(body => body.label === 'spawnAreaMarker');
-        Matter.World.remove(engineRef.current.world, markers);
-      }
-    }
+    ballsRef.current.push(ball);
+    console.log("Ball spawned. Total balls:", ballsRef.current.length);
   };
 
   const spawnBalls = () => {
@@ -188,8 +216,107 @@ const ShapeContainer = () => {
         }
       );
       Matter.World.add(engineRef.current.world, ball);
+      ballsRef.current.push(ball);
+    }
+    console.log("5 balls spawned. Total balls:", ballsRef.current.length);
+  };
+
+  const toggleSetSpawnArea = () => {
+    setSetSpawnAreaMode(prev => !prev);
+    if (spawnArea) {
+      setSpawnArea(null);
+      if (engineRef.current) {
+        const markers = engineRef.current.world.bodies.filter(body => body.label === 'spawnAreaMarker');
+        Matter.World.remove(engineRef.current.world, markers);
+      }
     }
   };
+
+  const freezeBalls = () => {
+    setIsFrozen(prev => !prev);
+    const engine = engineRef.current;
+    if (!engine) return;
+
+    ballsRef.current.forEach(ball => {
+      if (isFrozen) {
+        // Unfreeze
+        Matter.Body.setStatic(ball, false);
+      } else {
+        // Freeze
+        Matter.Body.setStatic(ball, true);
+      }
+    });
+  };
+
+  const updateVisibleBalls = useCallback(() => {
+    const visible = ballsRef.current.filter(ball => 
+      ball.position.x >= 0 && ball.position.x <= 800 &&
+      ball.position.y >= 0 && ball.position.y <= 600
+    );
+    setVisibleBalls(visible);
+  }, []);
+
+  useEffect(() => {
+    const intervalId = setInterval(updateVisibleBalls, 100); // Update every 100ms
+    return () => clearInterval(intervalId);
+  }, [updateVisibleBalls]);
+
+  const startCounting = () => {
+    console.log("Starting count...");
+    setIsCounting(true);
+    setBallCount(0);
+  };
+
+  const stopCounting = () => {
+    console.log("Stopping count...");
+    setIsCounting(false);
+  };
+
+  const countBalls = useCallback(() => {
+    console.log("Counting balls...");
+    if (ballCount >= visibleBalls.length) {
+      console.log("All visible balls counted. Stopping.");
+      stopCounting();
+      return;
+    }
+
+    const ball = visibleBalls[ballCount];
+    if (ball && ball.render) {
+      console.log(`Counting ball ${ballCount + 1}`);
+      ball.render.fillStyle = '#FF00FF'; // Change color to indicate counted
+      setBallCount(prevCount => prevCount + 1);
+    } else {
+      console.log(`Ball ${ballCount + 1} not found or doesn't have render property`);
+    }
+  }, [ballCount, visibleBalls]);
+
+  useEffect(() => {
+    let intervalId;
+    if (isCounting) {
+      intervalId = setInterval(countBalls, countSpeed);
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isCounting, countSpeed, countBalls]);
+
+  useEffect(() => {
+    const engine = engineRef.current;
+    if (!engine) return;
+
+    const removeOutOfBoundsBalls = () => {
+      const bodiesToRemove = ballsRef.current.filter(ball => 
+        ball.position.y > 600 || ball.position.x < 0 || ball.position.x > 800
+      );
+
+      Matter.World.remove(engine.world, bodiesToRemove);
+      ballsRef.current = ballsRef.current.filter(ball => !bodiesToRemove.includes(ball));
+    };
+
+    const intervalId = setInterval(removeOutOfBoundsBalls, 1000); // Check every second
+
+    return () => clearInterval(intervalId);
+  }, []);
 
   return (
     <div>
@@ -204,6 +331,17 @@ const ShapeContainer = () => {
           {setSpawnAreaMode ? 'Cancel Set Spawn Area' : 'Set Spawn Area'}
         </button>
         <button onClick={spawnBalls} disabled={!spawnArea}>Spawn Balls</button>
+        <button onClick={freezeBalls}>{isFrozen ? 'Unfreeze Balls' : 'Freeze Balls'}</button>
+        <button onClick={startCounting} disabled={isCounting}>Start Counting</button>
+        <button onClick={stopCounting} disabled={!isCounting}>Stop Counting</button>
+        <input 
+          type="range" 
+          min="100" 
+          max="2000" 
+          value={countSpeed} 
+          onChange={(e) => setCountSpeed(Number(e.target.value))}
+        />
+        <span>Count Speed: {countSpeed}ms</span>
       </div>
       <p>
         {setSpawnAreaMode 
@@ -213,6 +351,12 @@ const ShapeContainer = () => {
             : "Set a spawn area to start spawning balls"}
       </p>
       {spawnArea && <p>Spawn area set at x: {spawnArea.x.toFixed(2)}, y: {spawnArea.y.toFixed(2)}</p>}
+      {isContainerFull && <p style={{color: 'red', fontWeight: 'bold'}}>Container is full!</p>}
+      <p>Ball Count: {ballCount}</p>
+      <p>Total Balls: {ballsRef.current.length}</p>
+      <p>Visible Balls: {visibleBalls.length}</p>
+      <p>Counting: {isCounting ? 'Yes' : 'No'}</p>
+      <p>Balls Frozen: {isFrozen ? 'Yes' : 'No'}</p>
     </div>
   );
 };
