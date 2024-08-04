@@ -8,7 +8,8 @@ import { LongFormSubtraction } from "./projects/LongFormSubtraction";
 import LongFormAddition from "./projects/LongFormAddition";
 import DraggableQuadrilateral from "./projects/DraggableQuadrilateral";
 import TrigCircleVisualization from "./projects/AtanTangentTrig";
-import ShapeContainer from './projects/VolumeEstimate';
+import ShapeContainer from "./projects/VolumeEstimate";
+import MathEquationSolver from "./projects/MathEquationSolver";
 import path from "path";
 
 const projectList = [
@@ -39,13 +40,17 @@ const projectList = [
     name: "Trig Visualization",
     path: "/trig-visualization",
     element: <TrigCircleVisualization />,
-  }
-  ,
+  },
   {
     name: "Volume Approximation",
     path: "/volume-approximation",
     element: <ShapeContainer />,
-  }
+  },
+  {
+    name: "math-equation-solver",
+    path: "/math equation solver",
+    element: <MathEquationSolver />,
+  },
 ];
 
 const Home: React.FC = () => (

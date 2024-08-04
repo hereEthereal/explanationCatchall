@@ -332,8 +332,8 @@ const ShapeContainer = () => {
         </button>
         <button onClick={spawnBalls} disabled={!spawnArea}>Spawn Balls</button>
         <button onClick={freezeBalls}>{isFrozen ? 'Unfreeze Balls' : 'Freeze Balls'}</button>
-        <button onClick={startCounting} disabled={isCounting}>Start Counting</button>
-        <button onClick={stopCounting} disabled={!isCounting}>Stop Counting</button>
+        {/* <button onClick={startCounting} disabled={isCounting}>Start Counting</button>
+        <button onClick={stopCounting} disabled={!isCounting}>Stop Counting</button> */}
         <input 
           type="range" 
           min="100" 
