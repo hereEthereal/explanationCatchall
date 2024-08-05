@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, ChangeEvent } from 'react';
 import * as math from 'mathjs';
 import styled from 'styled-components';
 
-// Styled components
 const Container = styled.div`
   max-width: 500px;
   margin: 40px auto;
@@ -10,6 +9,15 @@ const Container = styled.div`
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+`;
+
+const StyledSelect = styled.select`
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  width: 100%;
+  margin-bottom: 8px;
 `;
 
 const Title = styled.h1`
@@ -21,158 +29,215 @@ const Title = styled.h1`
 
 const InputContainer = styled.div`
   display: flex;
+  flex-direction: column;
   gap: 8px;
   margin-bottom: 16px;
 `;
 
 const Input = styled.input`
-  flex-grow: 1;
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 16px;
 `;
 
+const ButtonContainer = styled.div`
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+`;
+
 const Button = styled.button`
   padding: 8px 16px;
-  background-color: #0070f3;
+  background-color: ${props => props.disabled ? '#cccccc' : '#0070f3'};
   color: white;
   border: none;
   border-radius: 4px;
   font-size: 16px;
-  cursor: pointer;
+  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
   transition: background-color 0.3s ease;
 
   &:hover {
-    background-color: #0051bb;
-  }
-
-  &:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
+    background-color: ${props => props.disabled ? '#cccccc' : '#0051bb'};
   }
 `;
 
-const Result = styled.p`
-  font-size: 18px;
-  font-weight: 600;
-  color: #0070f3;
-`;
-
-const Error = styled.p`
-  color: #d32f2f;
-  background-color: #ffcdd2;
-  padding: 8px;
-  border-radius: 4px;
-`;
-
-const StepContainer = styled.div`
+const WorkingLine = styled.div`
   margin-top: 16px;
   padding: 8px;
   background-color: #f0f0f0;
   border-radius: 4px;
+  font-family: monospace;
+  font-size: 18px;
 `;
 
-// TypeScript interfaces for MathNode types
-interface OperatorNode extends math.MathNode {
-  op: string;
-  args: math.MathNode[];
-}
+const InfoText = styled.p`
+  font-size: 14px;
+  color: #666;
+  margin-top: 8px;
+`;
 
-interface ParenthesisNode extends math.MathNode {
-  content: math.MathNode;
-}
+const exampleEquations = [
+  '(8 - 3) * 2 + 5',
+  'sqrt(16) + 3^2',
+  '2 * pi * 5',
+  '(15 % 4) * 3',
+  
+];
 
-// Main component
+
 const MathEquationSolver: React.FC = () => {
-  const [equation, setEquation] = useState<string>('');
-  const [result, setResult] = useState<string>('');
-  const [error, setError] = useState<string>('');
-  const [steps, setSteps] = useState<string[]>([]);
-  const [currentStep, setCurrentStep] = useState<number>(0);
-
-  // Solve the equation and generate steps
-  const solveEquation = () => {
-    try {
-      const solution = math.evaluate(equation);
-      console.log('Solution:', solution);
-      setResult(`Result: ${solution}`);
-      setError('');
-      generateSteps();
-    } catch (err) {
-      setError('Invalid equation. Please check your input.');
-      setResult('');
-      setSteps([]);
-      setCurrentStep(0);
-    }
-  };
-
-  // Generate step-by-step solution
-  const generateSteps = () => {
-    try {
-      const node = math.parse(equation);
-      const steps: string[] = [];
-
+    const [equation, setEquation] = useState<string>('');
+    const [currentStep, setCurrentStep] = useState<string>('');
+    const [steps, setSteps] = useState<string[]>([]);
+    const [stepIndex, setStepIndex] = useState<number>(0);
+    const [buildUpSteps, setBuildUpSteps] = useState<string[]>([]);
+    const [currentBuildUpStep, setCurrentBuildUpStep] = useState<number>(0);
+  
+    const solveEquation = () => {
+      try {
+        const node = math.parse(equation);
+        const newSteps = generateSteps(node);
+        setSteps(newSteps);
+        setCurrentStep(newSteps[0]);
+        setStepIndex(0);
+      } catch (err) {
+        setCurrentStep('Invalid equation. Please check your input.');
+        setSteps([]);
+      }
+    };
+  
+    const generateSteps = (node: math.MathNode): string[] => {
+      const steps: string[] = [node.toString()];
+      
       const traverse = (node: math.MathNode): string => {
         if (node.type === 'OperatorNode') {
-          const opNode = node as OperatorNode;
-          const leftResult = traverse(opNode.args[0]);
-          const rightResult = traverse(opNode.args[1]);
-          const result = math.evaluate(`${leftResult} ${opNode.op} ${rightResult}`);
-          steps.push(`${leftResult} ${opNode.op} ${rightResult} = ${result}`);
+          const opNode = node as math.OperatorNode;
+          const left = traverse(opNode.args[0]);
+          const right = traverse(opNode.args[1]);
+          const result = math.evaluate(`${left} ${opNode.op} ${right}`);
+          let newStep = steps[steps.length - 1].replace(`${left} ${opNode.op} ${right}`, result.toString());
+          newStep = removeUnnecessaryParentheses(newStep);
+          if (newStep !== steps[steps.length - 1]) {
+            steps.push(newStep);
+          }
           return result.toString();
         } else if (node.type === 'ParenthesisNode') {
-          const parenNode = node as ParenthesisNode;
-          return traverse(parenNode.content);
+          const parenNode = node as math.ParenthesisNode;
+          const innerResult = traverse(parenNode.content);
+          let newStep = steps[steps.length - 1].replace(`(${parenNode.content.toString()})`, innerResult);
+          newStep = removeUnnecessaryParentheses(newStep);
+          if (newStep !== steps[steps.length - 1]) {
+            steps.push(newStep);
+          }
+          return innerResult;
+        } else if (node.type === 'FunctionNode') {
+          const funcNode = node as math.FunctionNode;
+          const args = funcNode.args.map(arg => traverse(arg));
+          const funcName = funcNode.fn.toString();
+          const result = math.evaluate(`${funcName}(${args.join(',')})`);
+          let newStep = steps[steps.length - 1].replace(`${funcName}(${args.join(',')})`, result.toString());
+          newStep = removeUnnecessaryParentheses(newStep);
+          if (newStep !== steps[steps.length - 1]) {
+            steps.push(newStep);
+          }
+          return result.toString();
         } else {
           return node.toString();
         }
       };
-
+  
       traverse(node);
-      setSteps(steps);
-      setCurrentStep(0);
-    } catch (err) {
-      setError('Error generating steps. Please check your input.');
-      setSteps([]);
-      setCurrentStep(0);
-    }
-  };
+      return steps;
+    };
+  
+    const removeUnnecessaryParentheses = (expression: string): string => {
+      return expression.replace(/\((\d+(\.\d+)?)\)/g, '$1');
+    };
+  
+    const handleStep = () => {
+      if (stepIndex < steps.length - 1) {
+        setStepIndex(stepIndex + 1);
+        setCurrentStep(steps[stepIndex + 1]);
+      }
+    };
+  
+    const handleExampleSelect = (event: ChangeEvent<HTMLSelectElement>) => {
+        setEquation(event.target.value);
+      };
 
-  // Handle step button click
-  const handleStep = () => {
-    if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1);
-    }
+    const generateBuildUpSteps = () => {
+      const operators = ['+', '-', '*', '/', '^'];
+      const functions = ['sqrt', 'sin', 'cos', 'tan', 'log', 'abs'];
+      let currentEquation = Math.floor(Math.random() * 10).toString();
+      const steps: string[] = [currentEquation];
+  
+      for (let i = 0; i < 5; i++) {
+        const rand = Math.random();
+        if (rand < 0.7) {
+          // Add an operator and a number
+          const operator = operators[Math.floor(Math.random() * operators.length)];
+          const number = Math.floor(Math.random() * 10);
+          currentEquation = `(${currentEquation}) ${operator} ${number}`;
+        } else {
+          // Wrap in a function
+          const func = functions[Math.floor(Math.random() * functions.length)];
+          currentEquation = `${func}(${currentEquation})`;
+        }
+        steps.push(currentEquation);
+      }
+  
+      setBuildUpSteps(steps);
+      setCurrentBuildUpStep(0);
+      setEquation(steps[0]);
+    };
+  
+    const handleBuildUpStep = () => {
+      if (currentBuildUpStep < buildUpSteps.length - 1) {
+        setCurrentBuildUpStep(currentBuildUpStep + 1);
+        setEquation(buildUpSteps[currentBuildUpStep + 1]);
+      }
+    };
+  
+    return (
+        <Container>
+          <Title>Math Equation Solver</Title>
+          <InputContainer>
+            <StyledSelect
+              onChange={handleExampleSelect}
+              value={equation}
+            >
+              <option value="">Select an example equation</option>
+              {exampleEquations.map((eq, index) => (
+                <option key={index} value={eq}>
+                  {eq}
+                </option>
+              ))}
+            </StyledSelect>
+            <Input
+              type="text"
+              value={equation}
+              onChange={(e) => setEquation(e.target.value)}
+              placeholder="Enter your equation (e.g., (8 - 3) * 2 + 5)"
+            />
+            <ButtonContainer>
+              <Button onClick={solveEquation}>Solve</Button>
+              <Button onClick={handleStep} disabled={stepIndex >= steps.length - 1 || steps.length === 0}>
+                Step
+              </Button>
+              <Button onClick={generateBuildUpSteps}>Generate Build-up</Button>
+              <Button onClick={handleBuildUpStep} disabled={currentBuildUpStep >= buildUpSteps.length - 1}>
+                Build Up Step
+              </Button>
+            </ButtonContainer>
+          </InputContainer>
+          {currentStep && <WorkingLine>{currentStep}</WorkingLine>}
+          <InfoText>
+            Supported operations: + (add), - (subtract), * (multiply), / (divide), 
+            ^ or ** (exponent), sqrt() (square root), sin(), cos(), tan(), log(), abs()
+          </InfoText>
+        </Container>
+      );
   };
-
-  return (
-    <Container>
-      <Title>Math Equation Solver</Title>
-      <InputContainer>
-        <Input
-          type="text"
-          value={equation}
-          onChange={(e) => setEquation(e.target.value)}
-          placeholder="Enter your equation (e.g., 3*4+4)"
-        />
-        <Button onClick={solveEquation}>Solve</Button>
-        <Button onClick={handleStep} disabled={currentStep >= steps.length}>
-          Step
-        </Button>
-      </InputContainer>
-      {result && <Result>{result}</Result>}
-      {error && <Error>{error}</Error>}
-      {steps.length > 0 && (
-        <StepContainer>
-          <h3>Steps:</h3>
-          {steps.slice(0, currentStep).map((step, index) => (
-            <p key={index}>{step}</p>
-          ))}
-        </StepContainer>
-      )}
-    </Container>
-  );
-};
 
 export default MathEquationSolver;

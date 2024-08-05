@@ -10,7 +10,17 @@ import DraggableQuadrilateral from "./projects/DraggableQuadrilateral";
 import TrigCircleVisualization from "./projects/AtanTangentTrig";
 import ShapeContainer from "./projects/VolumeEstimate";
 import MathEquationSolver from "./projects/MathEquationSolver";
+import BinarySearchVisualizer from "./projects/BinarySearch/BinarySearchVisualizer";
+import BubbleSortVisualizer from "./projects/BubbleSortVisualizer/BubbleSortVisualizer";
+import FibonacciGenerator from "./projects/FibonacciGenerator/FibonacciGenerator"
 import path from "path";
+import SieveVisualizer from "./projects/SieveVisualizer/SieveVisualizer";
+import TrigVisualizer from "./projects/TrigVisualizer/TrigVisualizer";
+import SetOperationsVisualizer from "./projects/SetOperationsVisualizer/SetOperationsVisualizer";
+import QuadraticSolver from "./projects/QuadraticSolver/QuadraticSolver";
+import { LinearRegressionVisualizer } from "./projects/LinearRegressionVisualizer/LinearRegressionVisualizer";
+import { HarmonicVisualizer } from "./projects/HarmonicVisualizer/HarmonicVisualizer";
+import ArraysHashingFlow from "./projects/ArraysHashingFlow";
 
 const projectList = [
   { name: "App A", path: "/app-a", element: <AppA /> },
@@ -51,6 +61,86 @@ const projectList = [
     path: "/math equation solver",
     element: <MathEquationSolver />,
   },
+  {
+    name: "BinarySearchVisualizer",
+    path: "BinarySearchVisualizer",
+    element: <BinarySearchVisualizer arraySize={20} maxIncrement={10} />
+    ,
+  },
+  {
+    name: "BubbleSortVisualizer",
+    path: "BubbleSortVisualizer",
+    element: (
+      <BubbleSortVisualizer
+        initialArray={[64, 34, 25, 12, 22, 11, 90]}
+        speed={300}
+      />
+    ),
+  },
+  {
+    name: "FibonacciGenerator",
+    path: "FibonacciGenerator",
+    element: (
+      <FibonacciGenerator maxSteps={30} />
+
+    ),
+  },
+  {
+    name: "SieveVisualizer",
+    path: "SieveVisualizer",
+    element: (
+      <SieveVisualizer maxNumber={100} />
+
+    ),
+  },
+  {
+    name: "TrigVisualizer",
+    path: "TrigVisualizer",
+    element: (
+      <TrigVisualizer width={800} height={600} />
+
+    ),
+  },
+  {
+    name: "SetOperationsVisualizer",
+    path: "SetOperationsVisualizer",
+    element: (
+      <SetOperationsVisualizer />
+
+    ),
+  },
+  {
+    name: "QuadraticSolver",
+    path: "QuadraticSolver",
+    element: (
+      <QuadraticSolver />
+
+    ),
+  },
+  {
+    name: "LinearRegressionVisualizer",
+    path: "LinearRegressionVisualizer",
+    element: (
+      <LinearRegressionVisualizer />
+
+    ),
+  },
+  {
+    name: "HarmonicVisualizer",
+    path: "HarmonicVisualizer",
+    element: (
+      <HarmonicVisualizer />
+
+    ),
+  },
+  {
+    name: "ArraysHashingFlow",
+    path: "ArraysHashingFlow",
+    element: (
+      <ArraysHashingFlow />
+
+    ),
+  }
 ];
 
 const Home: React.FC = () => (
