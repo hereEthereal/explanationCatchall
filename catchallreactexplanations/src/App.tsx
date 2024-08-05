@@ -12,7 +12,7 @@ import ShapeContainer from "./projects/VolumeEstimate";
 import MathEquationSolver from "./projects/MathEquationSolver";
 import BinarySearchVisualizer from "./projects/BinarySearch/BinarySearchVisualizer";
 import BubbleSortVisualizer from "./projects/BubbleSortVisualizer/BubbleSortVisualizer";
-import FibonacciGenerator from "./projects/FibonacciGenerator/FibonacciGenerator"
+import FibonacciGenerator from "./projects/FibonacciGenerator/FibonacciGenerator";
 import path from "path";
 import SieveVisualizer from "./projects/SieveVisualizer/SieveVisualizer";
 import TrigVisualizer from "./projects/TrigVisualizer/TrigVisualizer";
@@ -21,6 +21,12 @@ import QuadraticSolver from "./projects/QuadraticSolver/QuadraticSolver";
 import { LinearRegressionVisualizer } from "./projects/LinearRegressionVisualizer/LinearRegressionVisualizer";
 import { HarmonicVisualizer } from "./projects/HarmonicVisualizer/HarmonicVisualizer";
 import ArraysHashingFlow from "./projects/ArraysHashingFlow";
+import EuclideanGCD from "./projects/EuclideanGCD/EuclideanGCD";
+import BasicMatrixOperations from "./projects/BasicMatrixOperations/BasicMatrixOperations";
+import SimpleHarmonicMotion from "./projects/SimpleHarmonicMotion/SimpleHarmonicMotion";
+import LogicGatesSimulator from "./projects/LogicGatesSimulator/LogicGatesSimulator";
+import LinkedListVisualizer from "./projects/LinkedListVisualizer/LinkedListVisualizer";
+import RhythmTypingTrainer from "./projects/typing/RhythmTypingTrainer";
 
 const projectList = [
   { name: "App A", path: "/app-a", element: <AppA /> },
@@ -64,8 +70,7 @@ const projectList = [
   {
     name: "BinarySearchVisualizer",
     path: "BinarySearchVisualizer",
-    element: <BinarySearchVisualizer arraySize={20} maxIncrement={10} />
-    ,
+    element: <BinarySearchVisualizer arraySize={20} maxIncrement={10} />,
   },
   {
     name: "BubbleSortVisualizer",
@@ -80,67 +85,73 @@ const projectList = [
   {
     name: "FibonacciGenerator",
     path: "FibonacciGenerator",
-    element: (
-      <FibonacciGenerator maxSteps={30} />
-
-    ),
+    element: <FibonacciGenerator maxSteps={30} />,
   },
   {
     name: "SieveVisualizer",
     path: "SieveVisualizer",
-    element: (
-      <SieveVisualizer maxNumber={100} />
-
-    ),
+    element: <SieveVisualizer maxNumber={100} />,
   },
   {
     name: "TrigVisualizer",
     path: "TrigVisualizer",
-    element: (
-      <TrigVisualizer width={800} height={600} />
-
-    ),
+    element: <TrigVisualizer width={800} height={600} />,
   },
   {
     name: "SetOperationsVisualizer",
     path: "SetOperationsVisualizer",
-    element: (
-      <SetOperationsVisualizer />
-
-    ),
+    element: <SetOperationsVisualizer />,
   },
   {
     name: "QuadraticSolver",
     path: "QuadraticSolver",
-    element: (
-      <QuadraticSolver />
-
-    ),
+    element: <QuadraticSolver />,
   },
   {
     name: "LinearRegressionVisualizer",
     path: "LinearRegressionVisualizer",
-    element: (
-      <LinearRegressionVisualizer />
-
-    ),
+    element: <LinearRegressionVisualizer />,
   },
   {
     name: "HarmonicVisualizer",
     path: "HarmonicVisualizer",
-    element: (
-      <HarmonicVisualizer />
-
-    ),
+    element: <HarmonicVisualizer />,
   },
   {
     name: "ArraysHashingFlow",
     path: "ArraysHashingFlow",
-    element: (
-      <ArraysHashingFlow />
-
-    ),
-  }
+    element: <ArraysHashingFlow />,
+  },
+  {
+    name: "EuclideanGCD",
+    path: "EuclideanGCD",
+    element: <EuclideanGCD />,
+  },
+  {
+    name: "SimpleHarmonicMotion",
+    path: "SimpleHarmonicMotion",
+    element: <SimpleHarmonicMotion />,
+  },
+  {
+    name: "LogicGatesSimulator",
+    path: "LogicGatesSimulator",
+    element: <LogicGatesSimulator />,
+  },
+  {
+    name: "BasicMatrixOperations",
+    path: "BasicMatrixOperations",
+    element: <BasicMatrixOperations />,
+  },
+  {
+    name: "LinkedListVisualizer",
+    path: "LinkedListVisualizer",
+    element: <LinkedListVisualizer />,
+  },
+  {
+    name: "RhythmTypingTrainer",
+    path: "RhythmTypingTrainer",
+    element: <RhythmTypingTrainer />,
+  },
 ];
 
 const Home: React.FC = () => (

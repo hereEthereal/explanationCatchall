@@ -1,1 +1,0 @@
-please make the functionality into a component for a pre-existing app

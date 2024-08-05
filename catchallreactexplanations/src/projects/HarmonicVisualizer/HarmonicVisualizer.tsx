@@ -30,8 +30,8 @@ export const HarmonicVisualizer: React.FC<HarmonicVisualizerProps> = () => {
     return -initialDisplacement * omega * omega * Math.cos(omega * t);
   };
 
-  const animate = (t: number) => {
-    setTime(t);
+  const animate = (timestamp: number) => {
+    setTime((prevTime) => prevTime + 0.016); // Increment by approximately 1/60th of a second
     animationRef.current = requestAnimationFrame(animate);
   };
 
@@ -39,9 +39,15 @@ export const HarmonicVisualizer: React.FC<HarmonicVisualizerProps> = () => {
     if (isPlaying) {
       animationRef.current = requestAnimationFrame(animate);
     } else {
-      cancelAnimationFrame(animationRef.current!);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
     }
-    return () => cancelAnimationFrame(animationRef.current!);
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
   }, [isPlaying]);
 
   const handleReset = () => {
@@ -51,7 +57,7 @@ export const HarmonicVisualizer: React.FC<HarmonicVisualizerProps> = () => {
 
   const generateData = () => {
     const data = [];
-    for (let t = 0; t <= time; t += 0.1) {
+    for (let t = 0; t <= 10; t += 0.1) {
       data.push({
         time: t,
         position: calculatePosition(t),
@@ -64,7 +70,7 @@ export const HarmonicVisualizer: React.FC<HarmonicVisualizerProps> = () => {
 
   return (
     <div className="HarmonicVisualizer">
-      <div className="motion-HarmonicVisualizer">
+      <div className="motion-visualizer">
         {systemType === 'spring' ? (
           <div className="spring-mass-system" style={{ transform: `translateX(${calculatePosition(time) * 50}px)` }}>
             <div className="spring"></div>
