@@ -27,6 +27,11 @@ import SimpleHarmonicMotion from "./projects/SimpleHarmonicMotion/SimpleHarmonic
 import LogicGatesSimulator from "./projects/LogicGatesSimulator/LogicGatesSimulator";
 import LinkedListVisualizer from "./projects/LinkedListVisualizer/LinkedListVisualizer";
 import RhythmTypingTrainer from "./projects/typing/RhythmTypingTrainer";
+import QuickSort from "./projects/QuicksortComponent";
+import DFSComponent from "./projects/DFSComponent";
+import BFSComponent from "./projects/BFSComponent";
+import DijkstraComponent from "./projects/DijkstraComponent";
+import BinaryTreeTraversalsComponent from "./projects/BinaryTreeTraversalsComponent";
 
 const projectList = [
   { name: "App A", path: "/app-a", element: <AppA /> },
@@ -151,6 +156,31 @@ const projectList = [
     name: "RhythmTypingTrainer",
     path: "RhythmTypingTrainer",
     element: <RhythmTypingTrainer />,
+  },
+  {
+    name: "QuicksortComponent",
+    path: "QuicksortComponent",
+    element: <QuickSort />,
+  },
+  {
+    name: "DFSComponent",
+    path: "DFSComponent",
+    element: <DFSComponent />,
+  },
+  {
+    name: "BFSComponent",
+    path: "BFSComponent",
+    element: <BFSComponent />,
+  },
+  {
+    name: "DijkstraComponent",
+    path: "DijkstraComponent",
+    element: <DijkstraComponent />,
+  },
+  {
+    name: "BinaryTreeTraversalsComponent",
+    path: "BinaryTreeTraversalsComponent",
+    element: <BinaryTreeTraversalsComponent />,
   },
 ];
 
