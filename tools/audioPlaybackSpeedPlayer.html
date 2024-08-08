@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Player with Speed Control</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .player {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        #speedControl {
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="player">
+        <audio id="audioPlayer" controls>
+            <source src="/Users/petermurphy/Downloads//Users/petermurphy/Downloads/ElevenLabs_2024-08-07T20_37_40_Emmaline - young British girl_pvc_s3_sb85_t2.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+        <div class="controls">
+            <input type="range" id="speedControl" min="0.5" max="2" step="0.1" value="1">
+            <label for="speedControl">Playback Speed: <span id="speedValue">1x</span></label>
+        </div>
+    </div>
+
+    <script>
+        const audioPlayer = document.getElementById('audioPlayer');
+        const speedControl = document.getElementById('speedControl');
+        const speedValue = document.getElementById('speedValue');
+
+        speedControl.addEventListener('input', function() {
+            const speed = parseFloat(this.value);
+            audioPlayer.playbackRate = speed;
+            speedValue.textContent = speed.toFixed(1) + 'x';
+        });
+    </script>
+</body>
+</html>

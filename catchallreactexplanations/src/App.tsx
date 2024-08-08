@@ -32,6 +32,14 @@ import DFSComponent from "./projects/DFSComponent";
 import BFSComponent from "./projects/BFSComponent";
 import DijkstraComponent from "./projects/DijkstraComponent";
 import BinaryTreeTraversalsComponent from "./projects/BinaryTreeTraversalsComponent";
+import QuicksortVisualizer from "./projects/QuicksortComponent";
+import QuicksortTree from "./projects/QuickSortTree";
+import QuicksortTreeLib from "./projects/QuickSortTreeLib";
+import QuickSortTreeDisplay from "./projects/QuickSortTreeDisplay";
+import OrgChartTree from "./projects/OrgTree";
+import QSTree from "./projects/QSTree";
+import QSTreeA from "./projects/QSTreeA";
+import QuickSortB from "./projects/QSTreeB";
 
 const projectList = [
   { name: "App A", path: "/app-a", element: <AppA /> },
@@ -160,7 +168,7 @@ const projectList = [
   {
     name: "QuicksortComponent",
     path: "QuicksortComponent",
-    element: <QuickSort />,
+    element: <QuicksortVisualizer />,
   },
   {
     name: "DFSComponent",
@@ -181,6 +189,41 @@ const projectList = [
     name: "BinaryTreeTraversalsComponent",
     path: "BinaryTreeTraversalsComponent",
     element: <BinaryTreeTraversalsComponent />,
+  },
+  {
+    name: "QuicksortTree",
+    path: "QuicksortTree",
+    element: <QuicksortTree />,
+  },
+  {
+    name: "QuicksortTreeLib",
+    path: "QuicksortTreeLib",
+    element: <QuicksortTreeLib />,
+  },
+  {
+    name: "QuickSortTreeDisplay",
+    path: "QuickSortTreeDisplay",
+    element: <QuickSortTreeDisplay />,
+  },
+  {
+    name: "OrgChartTree",
+    path: "OrgChartTree",
+    element: <OrgChartTree />,
+  },
+  {
+    name: "QSTree",
+    path: "QSTree",
+    element: <QSTree />,
+  },
+  {
+    name: "QSTreeA",
+    path: "QSTreeA",
+    element: <QSTreeA />,
+  },
+  {
+    name: "QuickSortB",
+    path: "QuickSortB",
+    element: <QuickSortB initialArray={[3,6,2,7,1,8]} />,
   },
 ];
 
