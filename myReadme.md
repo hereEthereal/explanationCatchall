@@ -18,3 +18,23 @@ You keep repeating this process - opening the remaining section in the middle an
 
 This method is much faster because each time you look, you cut the remaining pages in half. Even in a huge dictionary, you'd find your word in just a few steps.
 That's essentially what binary search does with sorted lists of data in computers. It keeps dividing the search area in half until it finds what it's looking for, making it much quicker than checking every single item one by one.
+
+
+
+OlyMega Presentation Projects:
+Babylonian Method Square Visualizer
+Draggable Quadrilateral (Maybe but needs more explanation of the calculation as well as it'd be nice to have gently moving points so we can see the updating angles in real time)
+Volume Approximation
+Math Equation Solver
+Binary Search Visualizer
+Bubble Sort Visualizer
+FibonacciGenerator
+SieveVisualizer
+TrigVisualizer (Maybe)
+Quadratic Equation Solver (Maybe but needs more understanding and work)
+LinearRegressionVisualizer
+Quicksort Visualizer
+Binary Tree Sort
+
+
+make a presentation mode where each component is cycling through its operations in a GIF like way to quickly show it working.

@@ -64,6 +64,7 @@
     ]
   },
   "devDependencies": {
-    "@types/three": "^0.167.1"
+    "@types/three": "^0.167.1",
+    "tailwindcss": "^3.4.9"
   }
 }

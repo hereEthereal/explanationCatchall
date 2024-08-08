@@ -28,14 +28,7 @@ import LogicGatesSimulator from "./projects/LogicGatesSimulator/LogicGatesSimula
 import LinkedListVisualizer from "./projects/LinkedListVisualizer/LinkedListVisualizer";
 import RhythmTypingTrainer from "./projects/typing/RhythmTypingTrainer";
 import QuickSort from "./projects/QuicksortComponent";
-import DFSComponent from "./projects/DFSComponent";
-import BFSComponent from "./projects/BFSComponent";
-import DijkstraComponent from "./projects/DijkstraComponent";
-import BinaryTreeTraversalsComponent from "./projects/BinaryTreeTraversalsComponent";
 import QuicksortVisualizer from "./projects/QuicksortComponent";
-import QuicksortTree from "./projects/QuickSortTree";
-import QuicksortTreeLib from "./projects/QuickSortTreeLib";
-import QuickSortTreeDisplay from "./projects/QuickSortTreeDisplay";
 import OrgChartTree from "./projects/OrgTree";
 import QSTree from "./projects/QSTree";
 import QSTreeA from "./projects/QSTreeA";
@@ -174,41 +167,6 @@ const projectList = [
     name: "QuicksortComponent",
     path: "QuicksortComponent",
     element: <QuicksortVisualizer />,
-  },
-  {
-    name: "DFSComponent",
-    path: "DFSComponent",
-    element: <DFSComponent />,
-  },
-  {
-    name: "BFSComponent",
-    path: "BFSComponent",
-    element: <BFSComponent />,
-  },
-  {
-    name: "DijkstraComponent",
-    path: "DijkstraComponent",
-    element: <DijkstraComponent />,
-  },
-  {
-    name: "BinaryTreeTraversalsComponent",
-    path: "BinaryTreeTraversalsComponent",
-    element: <BinaryTreeTraversalsComponent />,
-  },
-  {
-    name: "QuicksortTree",
-    path: "QuicksortTree",
-    element: <QuicksortTree />,
-  },
-  {
-    name: "QuicksortTreeLib",
-    path: "QuicksortTreeLib",
-    element: <QuicksortTreeLib />,
-  },
-  {
-    name: "QuickSortTreeDisplay",
-    path: "QuickSortTreeDisplay",
-    element: <QuickSortTreeDisplay />,
   },
   {
     name: "OrgChartTree",
