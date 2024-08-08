@@ -38,6 +38,7 @@ import ExampleA from "./projects/BinaryTreeSortedSVG";
 import BinaryTreeSortedSVG from "./projects/BinaryTreeSortedSVG";
 import BinaryTreeReact from "./projects/BinaryTreeKonva";
 import BinaryTreeKonva from "./projects/BinaryTreeKonva";
+import BinarySearchTreeKonvaSearch from "./projects/BinaryTreeKonvaSearch";
 
 const projectList = [
   { name: "App A", path: "/app-a", element: <AppA /> },
@@ -197,6 +198,11 @@ const projectList = [
     name: "BinaryTreeKonva",
     path: "BinaryTreeKonva",
     element: <BinaryTreeKonva />,
+  },  
+  {
+    name: "BinarySearchTreeKonvaSearch",
+    path: "BinarySearchTreeKonvaSearch",
+    element: <BinarySearchTreeKonvaSearch />,
   },  
 ];
 
