@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
+import { Stage, Layer, Circle, Line, Text } from 'react-konva';
 
-// Binary Search Tree node insertion function
 const insertNode = (root, value) => {
   if (root === null) {
     return { value, left: null, right: null };
@@ -39,34 +39,52 @@ const TreeNode = ({ node, nodePositions }) => {
   const circleRadius = 20;
 
   return (
-    <g>
-      <circle cx={position.x * 80} cy={position.y} r={circleRadius} fill="white" stroke="black" />
-      <text x={position.x * 80} y={position.y} textAnchor="middle" dominantBaseline="central">{node.value}</text>
+    <>
+      <Circle
+        x={position.x * 80}
+        y={position.y}
+        radius={circleRadius}
+        fill="white"
+        stroke="black"
+      />
+      <Text
+        x={position.x * 80 - circleRadius}
+        y={position.y - circleRadius / 2}
+        width={circleRadius * 2}
+        height={circleRadius}
+        text={node.value.toString()}
+        align="center"
+        verticalAlign="middle"
+      />
       {node.left && (
-        <line
-          x1={position.x * 80}
-          y1={position.y + circleRadius}
-          x2={nodePositions.get(node.left).x * 80}
-          y2={nodePositions.get(node.left).y - circleRadius}
+        <Line
+          points={[
+            position.x * 80,
+            position.y + circleRadius,
+            nodePositions.get(node.left).x * 80,
+            nodePositions.get(node.left).y - circleRadius,
+          ]}
           stroke="black"
         />
       )}
       {node.right && (
-        <line
-          x1={position.x * 80}
-          y1={position.y + circleRadius}
-          x2={nodePositions.get(node.right).x * 80}
-          y2={nodePositions.get(node.right).y - circleRadius}
+        <Line
+          points={[
+            position.x * 80,
+            position.y + circleRadius,
+            nodePositions.get(node.right).x * 80,
+            nodePositions.get(node.right).y - circleRadius,
+          ]}
           stroke="black"
         />
       )}
       {node.left && <TreeNode node={node.left} nodePositions={nodePositions} />}
       {node.right && <TreeNode node={node.right} nodePositions={nodePositions} />}
-    </g>
+    </>
   );
 };
 
-const BinaryTreeCyto = () => {
+const BinaryTreeKonva = () => {
   const [root, setRoot] = useState(null);
   const [inputValue, setInputValue] = useState('');
 
@@ -97,11 +115,13 @@ const BinaryTreeCyto = () => {
           Insert
         </button>
       </form>
-      <svg width={(maxX + 1) * 80} height={(maxY + 1) * 60 + 40}>
-        {root && <TreeNode node={root} nodePositions={nodePositions} />}
-      </svg>
+      <Stage width={(maxX + 1) * 80} height={(maxY + 1) * 60 + 40}>
+        <Layer>
+          {root && <TreeNode node={root} nodePositions={nodePositions} />}
+        </Layer>
+      </Stage>
     </div>
   );
 };
 
-export default BinaryTreeCyto;
+export default BinaryTreeKonva;

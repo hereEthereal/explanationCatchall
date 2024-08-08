@@ -39,9 +39,12 @@ import QuickSortTreeDisplay from "./projects/QuickSortTreeDisplay";
 import OrgChartTree from "./projects/OrgTree";
 import QSTree from "./projects/QSTree";
 import QSTreeA from "./projects/QSTreeA";
-import BinaryTreeCyto from "./projects/BinaryTreeCyto";
-import QuickSortVisualizerTree from "./projects/BinaryTreeCyto";
-import ExampleA from "./projects/BinaryTreeCyto";
+// import BinaryTreeCyto from "./projects/BinaryTreeCyto";
+import QuickSortVisualizerTree from "./projects/BinaryTreeSortedSVG";
+import ExampleA from "./projects/BinaryTreeSortedSVG";
+import BinaryTreeSortedSVG from "./projects/BinaryTreeSortedSVG";
+import BinaryTreeReact from "./projects/BinaryTreeKonva";
+import BinaryTreeKonva from "./projects/BinaryTreeKonva";
 
 const projectList = [
   { name: "App A", path: "/app-a", element: <AppA /> },
@@ -228,9 +231,14 @@ const projectList = [
   //   element: <QuickSortB initialArray={[3,6,2,7,1,8]} />,
   // }, 
   {
-    name: "BinaryTreeCyto",
-    path: "BinaryTreeCyto",
-    element: <BinaryTreeCyto />,
+    name: "BinaryTreeSortedSVG",
+    path: "BinaryTreeSortedSVG",
+    element: <BinaryTreeSortedSVG />,
+  },  
+  {
+    name: "BinaryTreeKonva",
+    path: "BinaryTreeKonva",
+    element: <BinaryTreeKonva />,
   },  
 ];
 
