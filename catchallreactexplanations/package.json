@@ -19,6 +19,7 @@
     "@types/react-router-dom": "^5.3.3",
     "@types/recharts": "^1.8.29",
     "components": "^0.1.0",
+    "cytoscape": "^3.30.2",
     "lodash": "^4.17.21",
     "lucide-react": "^0.424.0",
     "mathjs": "^13.0.3",

@@ -39,7 +39,9 @@ import QuickSortTreeDisplay from "./projects/QuickSortTreeDisplay";
 import OrgChartTree from "./projects/OrgTree";
 import QSTree from "./projects/QSTree";
 import QSTreeA from "./projects/QSTreeA";
-import QuickSortB from "./projects/QSTreeB";
+import BinaryTreeCyto from "./projects/BinaryTreeCyto";
+import QuickSortVisualizerTree from "./projects/BinaryTreeCyto";
+import ExampleA from "./projects/BinaryTreeCyto";
 
 const projectList = [
   { name: "App A", path: "/app-a", element: <AppA /> },
@@ -220,11 +222,16 @@ const projectList = [
     path: "QSTreeA",
     element: <QSTreeA />,
   },
+  // {
+  //   name: "QuickSortB",
+  //   path: "QuickSortB",
+  //   element: <QuickSortB initialArray={[3,6,2,7,1,8]} />,
+  // }, 
   {
-    name: "QuickSortB",
-    path: "QuickSortB",
-    element: <QuickSortB initialArray={[3,6,2,7,1,8]} />,
-  },
+    name: "BinaryTreeCyto",
+    path: "BinaryTreeCyto",
+    element: <BinaryTreeCyto />,
+  },  
 ];
 
 const Home: React.FC = () => (
