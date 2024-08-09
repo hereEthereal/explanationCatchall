@@ -1,5 +1,7 @@
-import React from "react";
-import { BrowserRouter as Router, Route, Link, Routes } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Link, Routes, useNavigate, useLocation } from 'react-router-dom';
+// ... (keep all your existing imports)
+
 import AppA from "./projects/AppA";
 import AppB from "./projects/AppB";
 import SquareRootB from "./projects/SquareRootB";
@@ -41,6 +43,7 @@ import BinaryTreeKonva from "./projects/BinaryTreeKonva";
 import BinarySearchTreeKonvaSearch from "./projects/BinaryTreeKonvaSearch";
 import AVLTreeKonva from "./projects/AVLTreeKonva";
 import BabylonianMethodSquareVisualizer from "./projects/BabylonianMethodSquareVisualizer";
+import BinarySearchTreeKonva from "./projects/BinaryTreeKonva";
 
 const projectList = [
   { name: "App A", path: "/app-a", element: <AppA /> },
@@ -219,6 +222,21 @@ const presentationList = [
     path: "BabylonianMethodSquareVisualizer",
     element: <BabylonianMethodSquareVisualizer />,
   },  
+  {
+    name: "BubbleSortVisualizer",
+    path: "BubbleSortVisualizer",
+    element: <BubbleSortVisualizer   />,
+  },  
+  {
+    name: "BinarySearchTreeKonva",
+    path: "BinarySearchTreeKonva",
+    element: <BinarySearchTreeKonva   />,
+  },  
+  {
+    name: "BinarySearchTreeKonvaSearch",
+    path: "BinarySearchTreeKonvaSearch",
+    element: <BinarySearchTreeKonvaSearch />,
+  },  
 ];
 
 const Home: React.FC = () => (
@@ -243,29 +261,89 @@ const Home: React.FC = () => (
 );
 
 const App: React.FC = () => {
-  return (
-    <Router>
-      <div>
-        <nav>
-          <ul>
-            <li>
-              <Link to="/">Home</Link>
-            </li>
-          </ul>
-        </nav>
+  const [currentPresentationIndex, setCurrentPresentationIndex] = useState(0);
+  const [keyPressTime, setKeyPressTime] = useState<number | null>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-        <Routes>
-          <Route path="/" element={<Home />} />
-          {projectList.map((project, index) => (
-            <Route key={index} path={project.path} element={project.element} />
-          ))}
-          {presentationList.map((project, index) => (
-            <Route key={index} path={project.path} element={project.element} />
-          ))}
-        </Routes>
-      </div>
-    </Router>
+  useEffect(() => {
+    const currentPath = location.pathname.slice(1); // Remove leading '/'
+    const index = presentationList.findIndex(presentation => presentation.path === currentPath);
+    if (index !== -1) {
+      setCurrentPresentationIndex(index);
+    }
+  }, [location]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'q' || e.key === 'w' || e.key === 'e') {
+        if (!keyPressTime) {
+          setKeyPressTime(Date.now());
+        }
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'q' || e.key === 'w' || e.key === 'e') {
+        if (keyPressTime && Date.now() - keyPressTime >= 200) {
+          navigateToNextPresentation();
+        }
+        setKeyPressTime(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [keyPressTime, currentPresentationIndex]);
+
+  const navigateToNextPresentation = () => {
+    const nextIndex = (currentPresentationIndex + 1) % presentationList.length;
+    navigate('/' + presentationList[nextIndex].path);
+  };
+
+  const navigateToPreviousPresentation = () => {
+    const previousIndex = (currentPresentationIndex - 1 + presentationList.length) % presentationList.length;
+    navigate('/' + presentationList[previousIndex].path);
+  };
+
+  return (
+    <div>
+      <nav>
+        <ul>
+          <li>
+            <Link to="/">Home</Link>
+          </li>
+          <li>
+            <button onClick={navigateToPreviousPresentation}>Previous Presentation</button>
+          </li>
+          <li>
+            <button onClick={navigateToNextPresentation}>Next Presentation</button>
+          </li>
+        </ul>
+      </nav>
+
+      <Routes>
+        <Route path="/" element={<Home />} />
+        {projectList.map((project, index) => (
+          <Route key={index} path={project.path} element={project.element} />
+        ))}
+        {presentationList.map((presentation, index) => (
+          <Route key={index} path={presentation.path} element={presentation.element} />
+        ))}
+      </Routes>
+    </div>
   );
 };
 
-export default App;
+const AppWrapper: React.FC = () => (
+  <Router>
+    <App />
+  </Router>
+);
+
+export default AppWrapper;

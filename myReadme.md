@@ -39,3 +39,7 @@ BinarySearchTreeKonvaSearch
 
 make a presentation mode where each component is cycling through its operations in a GIF like way to quickly show it working.
 
+
+---
+multiple databases with multiple facts about the same person where the data is spread out over many sources, names, DOB, first last name, some are nullable, some name changes,
+DOB and middle name are the most permanent, SSNs, driver licenses, conviction date, incarceration date, court dates, 

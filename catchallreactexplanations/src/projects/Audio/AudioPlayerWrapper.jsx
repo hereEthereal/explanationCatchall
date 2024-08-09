@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 
 const AudioPlayerWrapper = styled.div`
@@ -46,19 +46,49 @@ const SpeedDisplay = styled.span`
   font-weight: bold;
 `;
 
-const AudioPlayerComponent = ({ filePath, buttonText }) => {
+const ErrorMessage = styled.p`
+  color: red;
+  margin-top: 10px;
+`;
+
+const AudioPlayerComponent = ({ filePath, buttonText, initialSpeed = 1, autoPlay = false }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackRate, setPlaybackRate] = useState(1);
+  const [playbackRate, setPlaybackRate] = useState(initialSpeed);
   const [error, setError] = useState(null);
   const audioRef = useRef(null);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.playbackRate = initialSpeed;
+      if (autoPlay) {
+        attemptAutoplay();
+      }
+    }
+  }, [initialSpeed, autoPlay]);
+
+  const attemptAutoplay = async () => {
+    try {
+      // Attempt to play
+      await audioRef.current.play();
+      setIsPlaying(true);
+    } catch (e) {
+      console.warn("Autoplay failed:", e);
+      setError("Autoplay blocked. Click play to start audio.");
+    }
+  };
 
   const togglePlay = () => {
     if (isPlaying) {
       audioRef.current.pause();
+      setIsPlaying(false);
     } else {
-      audioRef.current.play().catch(e => setError(e.message));
+      audioRef.current.play().then(() => {
+        setIsPlaying(true);
+        setError(null); // Clear any previous autoplay error
+      }).catch(e => {
+        setError("Playback failed: " + e.message);
+      });
     }
-    setIsPlaying(!isPlaying);
   };
 
   const adjustSpeed = (adjustment) => {
@@ -82,10 +112,9 @@ const AudioPlayerComponent = ({ filePath, buttonText }) => {
         <SpeedDisplay>{playbackRate.toFixed(1)}x</SpeedDisplay>
         <SpeedButton onClick={() => adjustSpeed(0.1)}>+0.1x</SpeedButton>
       </SpeedControl>
-      {error && <p style={{color: 'red'}}>{error}</p>}
+      {error && <ErrorMessage>{error}</ErrorMessage>}
     </AudioPlayerWrapper>
   );
 };
-
 
 export default AudioPlayerComponent;

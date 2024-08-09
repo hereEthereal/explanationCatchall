@@ -1,5 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Stage, Layer, Circle, Line, Text } from 'react-konva';
+import AudioPlayerComponent from './Audio/AudioPlayerWrapper';  
+
 import styled from 'styled-components';
 
 // Tree Node class
@@ -87,6 +89,7 @@ const Input = styled.input`
   padding: 0.5rem;
   border: 1px solid #ccc;
   border-radius: 4px;
+  width: 300px;
 `;
 
 const Button = styled.button`
@@ -109,6 +112,8 @@ const Button = styled.button`
 
 const NumberList = styled.div`
   margin-bottom: 1rem;
+  max-width: 600px;
+  word-wrap: break-word;
 `;
 
 // Konva component for rendering tree nodes
@@ -154,8 +159,10 @@ const TreeNodeComponent = ({ node, positions, nodeRadius }) => {
 const BinarySearchTreeKonva = () => {
   const { root, insert } = useBinarySearchTree();
   const [inputValue, setInputValue] = useState('');
-  const [numberList, setNumberList] = useState([]);
+  const defaultList = [30,15,45,7,22,37,52,3,11,18,26,33,41,48,56,1,5,9,13,16,20,24,28,31,35,39,43,46,50,54];
+  const [numberList, setNumberList] = useState(defaultList);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isUsingDefault, setIsUsingDefault] = useState(true);
 
   // Canvas size variables
   const minCanvasWidth = 500;
@@ -173,8 +180,18 @@ const BinarySearchTreeKonva = () => {
   const handleAddToList = (e) => {
     e.preventDefault();
     const numbers = inputValue.split(',').map(num => parseInt(num.trim(), 10)).filter(num => !isNaN(num));
-    setNumberList(prevList => [...prevList, ...numbers]);
-    setInputValue('');
+    if (numbers.length > 0) {
+      setNumberList(numbers);
+      setIsUsingDefault(false);
+      setCurrentIndex(0);
+      setInputValue('');
+    }
+  };
+
+  const handleReset = () => {
+    setNumberList(defaultList);
+    setIsUsingDefault(true);
+    setCurrentIndex(0);
   };
 
   const handleStep = () => {
@@ -183,6 +200,11 @@ const BinarySearchTreeKonva = () => {
       setCurrentIndex(prevIndex => prevIndex + 1);
     }
   };
+
+  useEffect(() => {
+    // Reset the tree when the number list changes
+    setCurrentIndex(0);
+  }, [numberList]);
 
   // Calculate node positions
   const positions = root ? calculateNodePositions(root) : new Map();
@@ -212,15 +234,17 @@ const BinarySearchTreeKonva = () => {
           type="text"
           value={inputValue}
           onChange={handleInputChange}
-          placeholder="Enter numbers (comma-separated)"
+          placeholder="Enter numbers (comma-separated) or leave blank for default"
         />
-        <Button type="submit">Add to List</Button>
+        <Button type="submit">Set Custom List</Button>
+        <Button type="button" onClick={handleReset}>Reset to Default</Button>
       </Form>
       <NumberList>
-        <strong>Number List:</strong> {numberList.join(', ')}
+        <strong>{isUsingDefault ? "Default" : "Custom"} Number List:</strong> {numberList.join(', ')}
       </NumberList>
+      <AudioPlayerComponent buttonText={"explain"} initialSpeed={1.3} filePath={"./binaryTreeInsertion.mp3"} autoPlay={true}/>
       <Button onClick={handleStep} disabled={currentIndex >= numberList.length}>
-        Step
+        Step {currentIndex + 1} / {numberList.length}
       </Button>
       <Stage width={canvasWidth} height={canvasHeight}>
         <Layer>
@@ -232,3 +256,15 @@ const BinarySearchTreeKonva = () => {
 };
 
 export default BinarySearchTreeKonva;
+
+
+// In computer science, a binary tree is a tree data structure in which each node has at most two children, referred to as the left child and the right child
+// when we want to add new information to this tree, we follow a simple set of rules:
+
+// We always start at the root and compare our new piece of information to it.
+// If our new information is smaller than what's at the root, we move to the left.
+// If it's larger, we move to the right.
+// We keep doing this - moving left for smaller, right for larger - until we find an empty spot.
+// Once we find an empty spot, we put our new information there.
+
+// note, without balancing the tree, the tree can be built imbalanced, for example if we entered the values: 1,2,3,4,5, and so on.

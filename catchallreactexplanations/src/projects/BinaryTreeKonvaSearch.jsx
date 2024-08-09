@@ -1,8 +1,8 @@
-import React, { useState, useCallback } from 'react';
-import { Stage, Layer, Circle, Line, Text, Rect } from 'react-konva';
+import React, { useState, useCallback, useEffect } from 'react';
+import { Stage, Layer, Circle, Line, Text } from 'react-konva';
 import styled from 'styled-components';
 
-// Tree Node class (unchanged)
+// Tree Node class
 class TreeNode {
   constructor(value) {
     this.value = value;
@@ -11,7 +11,7 @@ class TreeNode {
   }
 }
 
-// Custom hook for managing tree state (modified to include search)
+// Custom hook for managing tree state
 const useBinarySearchTree = () => {
   const [root, setRoot] = useState(null);
   const [searchPath, setSearchPath] = useState([]);
@@ -38,6 +38,11 @@ const useBinarySearchTree = () => {
       return insertNode({ ...prevRoot }, value);
     });
   }, []);
+
+  const buildTree = useCallback((values) => {
+    setRoot(null);
+    values.forEach(value => insert(value));
+  }, [insert]);
 
   const searchStep = useCallback((searchValue) => {
     setSearchPath(prevPath => {
@@ -73,44 +78,52 @@ const useBinarySearchTree = () => {
     setSearchExplanation('');
   }, []);
 
-  return { root, insert, searchStep, resetSearch, searchPath, currentSearchNode, searchExplanation };
+  const resetTree = useCallback(() => {
+    setRoot(null);
+    resetSearch();
+  }, [resetSearch]);
+
+  return { root, insert, buildTree, searchStep, resetSearch, resetTree, searchPath, currentSearchNode, searchExplanation };
 };
 
-// Helper function to calculate node positions (unchanged)
+// Helper function to calculate node positions
 const calculateNodePositions = (root) => {
-    const positions = new Map();
-    let leftMost = 0;
-  
-    const calculatePositions = (node, depth, position) => {
-      if (!node) return null;
-  
-      const leftWidth = calculatePositions(node.left, depth + 1, position);
-      const rightWidth = calculatePositions(node.right, depth + 1, position + 1 + (leftWidth || 0));
-  
-      const width = (leftWidth || 0) + (rightWidth || 0) + 1;
-      const x = position + (leftWidth || 0);
-      const y = depth;
-  
-      positions.set(node, { x, y });
-      leftMost = Math.min(leftMost, x);
-  
-      return width;
-    };
-  
-    calculatePositions(root, 0, 0);
-  
-    // Adjust x positions to ensure the tree starts from x=0
-    positions.forEach((pos) => {
-      pos.x -= leftMost;
-    });
-  
-    return positions;
+  const positions = new Map();
+  let leftMost = 0;
+
+  const calculatePositions = (node, depth, position) => {
+    if (!node) return null;
+
+    const leftWidth = calculatePositions(node.left, depth + 1, position);
+    const rightWidth = calculatePositions(node.right, depth + 1, position + 1 + (leftWidth || 0));
+
+    const width = (leftWidth || 0) + (rightWidth || 0) + 1;
+    const x = position + (leftWidth || 0);
+    const y = depth;
+
+    positions.set(node, { x, y });
+    leftMost = Math.min(leftMost, x);
+
+    return width;
   };
-// Styled Components (extended)
+
+  calculatePositions(root, 0, 0);
+
+  // Adjust x positions to ensure the tree starts from x=0
+  positions.forEach((pos) => {
+    pos.x -= leftMost;
+  });
+
+  return positions;
+};
+
+// Styled Components
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  font-family: Arial, sans-serif;
+  padding: 20px;
 `;
 
 const Form = styled.form`
@@ -123,6 +136,7 @@ const Input = styled.input`
   padding: 0.5rem;
   border: 1px solid #ccc;
   border-radius: 4px;
+  font-size: 16px;
 `;
 
 const Button = styled.button`
@@ -132,6 +146,7 @@ const Button = styled.button`
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  font-size: 16px;
 
   &:hover {
     background-color: #3182ce;
@@ -145,6 +160,9 @@ const Button = styled.button`
 
 const NumberList = styled.div`
   margin-bottom: 1rem;
+  font-size: 16px;
+  max-width: 600px;
+  word-wrap: break-word;
 `;
 
 const ExplanationText = styled.div`
@@ -154,9 +172,10 @@ const ExplanationText = styled.div`
   border-radius: 4px;
   max-width: 400px;
   text-align: center;
+  font-size: 16px;
 `;
 
-// Konva component for rendering tree nodes (modified to highlight search path)
+// Konva component for rendering tree nodes
 const TreeNodeComponent = ({ node, positions, nodeRadius, searchPath, currentSearchNode }) => {
   if (!node) return null;
   const pos = positions.get(node);
@@ -216,19 +235,24 @@ const TreeNodeComponent = ({ node, positions, nodeRadius, searchPath, currentSea
 };
 
 // Main component
-const BinarySearchTreeKonvaSearch = () => {
-  const { root, insert, searchStep, resetSearch, searchPath, currentSearchNode, searchExplanation } = useBinarySearchTree();
+const BinarySearchTreeKonva = () => {
+  const { root, buildTree, searchStep, resetSearch, resetTree, searchPath, currentSearchNode, searchExplanation } = useBinarySearchTree();
   const [inputValue, setInputValue] = useState('');
   const [numberList, setNumberList] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [searchValue, setSearchValue] = useState('');
+  const [searchValue, setSearchValue] = useState('9');
+
+  const defaultList = [30,15,45,7,22,37,52,3,11,18,26,33,41,48,56,1,5,9,13,16,20,24,28,31,35,39,43,46,50,54];
+
+  // Use effect to build the tree on component mount
+  useEffect(() => {
+    buildTree(defaultList);
+    setNumberList(defaultList);
+  }, [buildTree]);
 
   // Canvas size variables
   const minCanvasWidth = 500;
   const minCanvasHeight = 380;
   const padding = 100; // Padding around the edges of the canvas
-
-  // Node size and spacing variables
   const nodeRadius = 20;
   const levelHeight = 80; // Vertical space between levels
 
@@ -239,15 +263,12 @@ const BinarySearchTreeKonvaSearch = () => {
   const handleAddToList = (e) => {
     e.preventDefault();
     const numbers = inputValue.split(',').map(num => parseInt(num.trim(), 10)).filter(num => !isNaN(num));
-    setNumberList(prevList => [...prevList, ...numbers]);
+    setNumberList(prevList => {
+      const newList = [...prevList, ...numbers];
+      buildTree(newList);
+      return newList;
+    });
     setInputValue('');
-  };
-
-  const handleStep = () => {
-    if (currentIndex < numberList.length) {
-      insert(numberList[currentIndex]);
-      setCurrentIndex(prevIndex => prevIndex + 1);
-    }
   };
 
   const handleSearchInputChange = (e) => {
@@ -262,6 +283,16 @@ const BinarySearchTreeKonvaSearch = () => {
 
   const handleSearchStep = () => {
     searchStep(parseInt(searchValue, 10));
+  };
+
+  const handleResetList = () => {
+    resetTree();
+    setNumberList([]);
+  };
+
+  const handleUseDefaultList = () => {
+    buildTree(defaultList);
+    setNumberList(defaultList);
   };
 
   // Calculate node positions
@@ -299,9 +330,8 @@ const BinarySearchTreeKonvaSearch = () => {
       <NumberList>
         <strong>Number List:</strong> {numberList.join(', ')}
       </NumberList>
-      <Button onClick={handleStep} disabled={currentIndex >= numberList.length}>
-        Step
-      </Button>
+      <Button onClick={handleResetList}>Reset List</Button>
+      <Button onClick={handleUseDefaultList}>Use Default List</Button>
       <Form onSubmit={handleSearch}>
         <Input
           type="number"
@@ -334,4 +364,4 @@ const BinarySearchTreeKonvaSearch = () => {
   );
 };
 
-export default BinarySearchTreeKonvaSearch;
+export default BinarySearchTreeKonva;

@@ -26,6 +26,7 @@ const BubbleSortVisualizer: React.FC<BubbleSortVisualizerProps> = ({
   const [isSorted, setIsSorted] = useState<boolean>(false);
   const [speed, setSpeed] = useState<number>(initialSpeed);
 
+
   const generateRandomArray = useCallback((length: number = 10) => {
     const newArray = Array.from({ length }, () => Math.floor(Math.random() * 100) + 1);
     setArray(newArray);
@@ -99,6 +100,11 @@ const BubbleSortVisualizer: React.FC<BubbleSortVisualizerProps> = ({
     }
   }, [isPlaying, currentStep, sortingSteps, speed]);
 
+  useEffect(() => {
+    reset();
+    setIsPlaying(true);  // Start playing automatically
+   }, []);
+
   const togglePlay = () => {
     setIsPlaying((prev) => !prev);
   };
@@ -167,7 +173,7 @@ const BubbleSortVisualizer: React.FC<BubbleSortVisualizerProps> = ({
           onChange={handleSpeedChange}
         />
       </SpeedControl>
-      <AudioPlayerComponent filePath={"./bubbleSort.mp3"} buttonText={"explain"} />
+      <AudioPlayerComponent initialSpeed={1.3} autoPlay={true} filePath={"./bubbleSort.mp3"} buttonText={"explain"} />
 
       <StepInfo>Step: {currentStep + 1} / {sortingSteps.length}</StepInfo>
       <StepDescription>{currentStepData.description}</StepDescription>
