@@ -1,146 +1,131 @@
-import React, { useEffect, useState, useRef } from 'react';
-import CytoscapeComponent from 'react-cytoscapejs';
+import React, { useEffect, useRef } from 'react';
+import cytoscape from 'cytoscape';
 
 const GridGraph = () => {
-  const [elements, setElements] = useState([]);
-  const [mode, setMode] = useState('none');
   const cyRef = useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
-    const rows = 8;
-    const cols = 10;
-    const newElements = [];
+    if (!containerRef.current) return;
+
+    const gridSize = 5; // 5x5 grid
+    const elements = [];
 
     // Create nodes
-    for (let i = 0; i < rows; i++) {
-      for (let j = 0; j < cols; j++) {
-        newElements.push({
-          data: { id: `node-${i}-${j}` },
-          position: { x: j * 100, y: i * 100 }
-        });
+    for (let i = 0; i < gridSize; i++) {
+      for (let j = 0; j < gridSize; j++) {
+        elements.push({ data: { id: `node-${i}-${j}` } });
       }
     }
 
-    // Create edges
-    for (let i = 0; i < rows; i++) {
-      for (let j = 0; j < cols; j++) {
-        if (j < cols - 1) {
-          newElements.push({
-            data: {
-              id: `edge-h-${i}-${j}`,
-              source: `node-${i}-${j}`,
-              target: `node-${i}-${j+1}`
-            }
-          });
+    // Create edges (including diagonals)
+    for (let i = 0; i < gridSize; i++) {
+      for (let j = 0; j < gridSize; j++) {
+        // Right
+        if (j < gridSize - 1) {
+          elements.push({ data: { source: `node-${i}-${j}`, target: `node-${i}-${j+1}` } });
         }
-        if (i < rows - 1) {
-          newElements.push({
-            data: {
-              id: `edge-v-${i}-${j}`,
-              source: `node-${i}-${j}`,
-              target: `node-${i+1}-${j}`
-            }
-          });
+        // Down
+        if (i < gridSize - 1) {
+          elements.push({ data: { source: `node-${i}-${j}`, target: `node-${i+1}-${j}` } });
+        }
+        // Diagonal down-right
+        if (i < gridSize - 1 && j < gridSize - 1) {
+          elements.push({ data: { source: `node-${i}-${j}`, target: `node-${i+1}-${j+1}` } });
+        }
+        // Diagonal down-left
+        if (i < gridSize - 1 && j > 0) {
+          elements.push({ data: { source: `node-${i}-${j}`, target: `node-${i+1}-${j-1}` } });
         }
       }
     }
 
-    setElements(newElements);
+    const cy = cytoscape({
+      container: containerRef.current,
+      elements: elements,
+      style: [
+        {
+          selector: 'node',
+          style: {
+            'background-color': '#666',
+            'label': 'data(id)'
+          }
+        },
+        {
+          selector: 'edge',
+          style: {
+            'width': 2,
+            'line-color': '#ccc'
+          }
+        }
+      ],
+      layout: { 
+        name: 'grid',
+        rows: gridSize,
+        cols: gridSize
+      }
+    });
+
+    cy.journeyMode = false;
+    cy.journeyStart = null;
+    cy.journeyEnd = null;
+
+    cy.on('tap', 'node', (event) => {
+      const node = event.target;
+      console.log('Node clicked:', node.id());
+      if (cy.journeyMode) {
+        if (!cy.journeyStart) {
+          cy.journeyStart = node;
+          node.style('background-color', 'green');
+        } else if (!cy.journeyEnd && node !== cy.journeyStart) {
+          cy.journeyEnd = node;
+          node.style('background-color', 'red');
+        } else {
+          // Reset journey if both are already selected
+          cy.elements().style('background-color', '#666');
+          cy.journeyStart = node;
+          cy.journeyEnd = null;
+          node.style('background-color', 'green');
+        }
+      }
+    });
+
+    cyRef.current = cy;
+
+    return () => {
+      cy.destroy();
+    };
   }, []);
 
-  useEffect(() => {
-    if (cyRef.current) {
-      cyRef.current.on('tap', 'node', (event) => {
-        const node = event.target;
-        if (mode === 'push') {
-          pushNodes(node);
-        } else if (mode === 'pull') {
-          pullNodes(node);
-        }
-      });
+  const toggleJourneyMode = () => {
+    const cy = cyRef.current;
+    cy.journeyMode = !cy.journeyMode;
+    if (!cy.journeyMode) {
+      cy.elements().style('background-color', '#666');
+      cy.journeyStart = null;
+      cy.journeyEnd = null;
     }
-  }, [mode]);
-
-  const pushNodes = (node) => {
-    const neighborNodes = node.neighborhood().nodes();
-    neighborNodes.forEach((neighbor) => {
-      const dx = neighbor.position().x - node.position().x;
-      const dy = neighbor.position().y - node.position().y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      const pushFactor = 20 / distance;
-      neighbor.animate({
-        position: {
-          x: neighbor.position().x + dx * pushFactor,
-          y: neighbor.position().y + dy * pushFactor
-        },
-        duration: 500
-      });
-    });
+    console.log('Journey Mode:', cy.journeyMode ? 'On' : 'Off');
   };
 
-  const pullNodes = (node) => {
-    const neighborNodes = node.neighborhood().nodes();
-    neighborNodes.forEach((neighbor) => {
-      const dx = node.position().x - neighbor.position().x;
-      const dy = node.position().y - neighbor.position().y;
-      const pullFactor = 0.2;
-      neighbor.animate({
-        position: {
-          x: neighbor.position().x + dx * pullFactor,
-          y: neighbor.position().y + dy * pullFactor
-        },
-        duration: 500
-      });
-    });
-  };
-
-  const layout = {
-    name: 'preset'
-  };
-
-  const style = [
-    {
-      selector: 'node',
-      style: {
-        'background-color': '#666',
-        'label': 'data(id)'
-      }
-    },
-    {
-      selector: 'edge',
-      style: {
-        'width': 3,
-        'line-color': '#ccc',
-        'target-arrow-color': '#ccc',
-        'target-arrow-shape': 'triangle'
-      }
+  const startJourney = () => {
+    const cy = cyRef.current;
+    if (cy.journeyStart && cy.journeyEnd) {
+      const dijkstra = cy.elements().dijkstra(cy.journeyStart);
+      const path = dijkstra.pathTo(cy.journeyEnd);
+      path.style('background-color', 'yellow');
+    } else {
+      alert('Please select both start and end nodes before starting the journey.');
     }
-  ];
+  };
 
   return (
     <div>
+      <div ref={containerRef} style={{ width: '100%', height: '400px' }} />
       <div>
-        <button 
-          onClick={() => setMode('push')} 
-          style={{backgroundColor: mode === 'push' ? 'lightblue' : 'white'}}
-        >
-          Push
-        </button>
-        <button 
-          onClick={() => setMode('pull')} 
-          style={{backgroundColor: mode === 'pull' ? 'lightblue' : 'white'}}
-        >
-          Pull
-        </button>
-        <button onClick={() => setMode('none')}>Reset</button>
+        <button onClick={toggleJourneyMode}>Toggle Journey Mode</button>
+        <button onClick={startJourney}>Start Journey</button>
       </div>
-      <CytoscapeComponent
-        elements={elements}
-        style={{ width: '1200px', height: '900px' }}
-        layout={layout}
-        stylesheet={style}
-        cy={(cy) => { cyRef.current = cy; }}
-      />
     </div>
   );
 };
