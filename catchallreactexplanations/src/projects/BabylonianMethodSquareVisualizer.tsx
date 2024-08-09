@@ -11,6 +11,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import AudioPlayerComponent from "./Audio/AudioPlayerWrapper";
 
 interface IterationData {
   iteration: number;
@@ -285,6 +286,8 @@ const BabylonianMethodSquareVisualizer: React.FC = () => {
         </p>
       </div>
       <AudioPlayer />
+      <AudioPlayerComponent filePath={"./babylonianSquareRootAlgorithmExplanationLong.mp3"} buttonText={"long explanation"} />
+      
 
       <p> let's learn the Babylonian Method Square algorithm!</p>
 
