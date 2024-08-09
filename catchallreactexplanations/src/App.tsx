@@ -39,6 +39,8 @@ import BinaryTreeSortedSVG from "./projects/BinaryTreeSortedSVG";
 import BinaryTreeReact from "./projects/BinaryTreeKonva";
 import BinaryTreeKonva from "./projects/BinaryTreeKonva";
 import BinarySearchTreeKonvaSearch from "./projects/BinaryTreeKonvaSearch";
+import AVLTreeKonva from "./projects/AVLTreeKonva";
+import BabylonianMethodSquareVisualizer from "./projects/BabylonianMethodSquareVisualizer";
 
 const projectList = [
   { name: "App A", path: "/app-a", element: <AppA /> },
@@ -204,6 +206,19 @@ const projectList = [
     path: "BinarySearchTreeKonvaSearch",
     element: <BinarySearchTreeKonvaSearch />,
   },  
+  {
+    name: "AVLTreeKonva BROKEN",
+    path: "AVLTreeKonva",
+    element: <AVLTreeKonva />,
+  },  
+];
+
+const presentationList = [
+  {
+    name: "BabylonianMethodSquareVisualizer",
+    path: "BabylonianMethodSquareVisualizer",
+    element: <BabylonianMethodSquareVisualizer />,
+  },  
 ];
 
 const Home: React.FC = () => (
@@ -211,6 +226,14 @@ const Home: React.FC = () => (
     <h1>Catchall - My React Projects</h1>
     <ul>
       {projectList.map((project, index) => (
+        <li key={index}>
+          <Link to={project.path}>{project.name}</Link>
+        </li>
+      ))}
+    </ul>
+    <h2>Presentations</h2>
+    <ul>
+      {presentationList.map((project, index) => (
         <li key={index}>
           <Link to={project.path}>{project.name}</Link>
         </li>
@@ -234,6 +257,9 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<Home />} />
           {projectList.map((project, index) => (
+            <Route key={index} path={project.path} element={project.element} />
+          ))}
+          {presentationList.map((project, index) => (
             <Route key={index} path={project.path} element={project.element} />
           ))}
         </Routes>

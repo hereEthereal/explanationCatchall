@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import styled, { keyframes } from "styled-components";
+import AudioPlayer from "./Audio/AudioPlayer";
 import {
   LineChart,
   Line,
@@ -17,20 +19,54 @@ interface IterationData {
   average: number;
 }
 
-const SquareRootB: React.FC = () => {
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+const fadeOut = keyframes`
+  from { opacity: 1; }
+  to { opacity: 0; }
+`;
+
+const SuccessMessage = styled.div<{ show: boolean }>`
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #4caf50;
+  color: white;
+  padding: 15px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  animation: ${(props) => (props.show ? fadeIn : fadeOut)} 0.5s ease-in-out;
+  display: ${(props) => (props.show ? "block" : "none")};
+`;
+
+const BabylonianMethodSquareVisualizer: React.FC = () => {
   const [S, setS] = useState<number>(100);
-  const [initialGuess, setInitialGuess] = useState<number>(10);
+  const [initialGuess, setInitialGuess] = useState<number>(2);
   const [currentIteration, setCurrentIteration] = useState<number>(0);
   const [iterations, setIterations] = useState<IterationData[]>([]);
   const [animationSpeed, setAnimationSpeed] = useState<number>(1000);
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [manualGuess, setManualGuess] = useState<string>("");
+  const [showSuccess, setShowSuccess] = useState<boolean>(false);
+
+  const isConverged = useCallback(
+    (x: number) => {
+      return Math.abs(x * x - S) / S < 0.0001; // Relative error
+    },
+    [S]
+  );
 
   const calculateIterations = useCallback(
     (startGuess: number = initialGuess) => {
       const newIterations: IterationData[] = [];
       let x = startGuess;
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 20; i++) {
+        // Increased max iterations
         const complementary = S / x;
         const newX = (x + complementary) / 2;
         newIterations.push({
@@ -39,14 +75,19 @@ const SquareRootB: React.FC = () => {
           complementary: complementary,
           average: newX,
         });
+        if (isConverged(newX)) break;
         x = newX;
-        if (Math.abs(x - complementary) < 0.0001) break;
       }
       setIterations(newIterations);
       setCurrentIteration(0);
+      setShowSuccess(false);
     },
-    [S, initialGuess]
+    [S, initialGuess, isConverged]
   );
+
+  useEffect(() => {
+    calculateIterations();
+  }, [S, initialGuess, calculateIterations]);
 
   useEffect(() => {
     calculateIterations();
@@ -54,7 +95,8 @@ const SquareRootB: React.FC = () => {
 
   const animate = useCallback(() => {
     setIsAnimating(true);
-    let i = currentIteration;
+    setShowSuccess(false);
+    let i = 0;
     const intervalId = setInterval(() => {
       if (i < iterations.length - 1) {
         setCurrentIteration(i + 1);
@@ -62,19 +104,31 @@ const SquareRootB: React.FC = () => {
       } else {
         clearInterval(intervalId);
         setIsAnimating(false);
+        if (isConverged(iterations[i].average)) {
+          setShowSuccess(true);
+          setTimeout(() => setShowSuccess(false), 3000);
+        }
       }
     }, animationSpeed);
     return () => clearInterval(intervalId);
-  }, [currentIteration, iterations, animationSpeed]);
+  }, [iterations, animationSpeed, isConverged]);
 
   const step = () => {
     if (currentIteration < iterations.length - 1) {
-      setCurrentIteration(currentIteration + 1);
+      setCurrentIteration((prev) => {
+        const next = prev + 1;
+        if (isConverged(iterations[next].average)) {
+          setShowSuccess(true);
+          setTimeout(() => setShowSuccess(false), 3000);
+        }
+        return next;
+      });
     }
   };
 
   const reset = () => {
     setCurrentIteration(0);
+    setShowSuccess(false);
   };
 
   const handleManualGuess = () => {
@@ -119,20 +173,18 @@ const SquareRootB: React.FC = () => {
         padding: "20px",
       }}
     >
-      <h2>Babylonian Method Square Visualizer</h2>
+      <SuccessMessage show={showSuccess}>
+        Success! The algorithm has converged on the square root of {S}.
+      </SuccessMessage>
 
-      <p> Make an initial guess. Guess any positive number x0 </p>
-      <p>
-        {" "}
-        Improve the guess. Apply the formula x1 = (x0 + S / x0) / 2. The number
-        x1 is a better approximation to sqrt(S).
-      </p>
-      <p>
-        {" "}
-        Iterate until convergence. Apply the formula xn+1 = (xn + S / xn) / 2
-        until the process converges. Convergence is achieved when the digits of
-        xn+1 and xn agree to as many decimal places as you desire.
-      </p>
+      <div>
+        <h1>Central concept: </h1>
+        <h2>
+          guess times (the area divided by guess) equals the area as represented
+          by a rectangle
+        </h2>
+      </div>
+
       <div style={{ marginBottom: "20px" }}>
         <label>
           S:
@@ -184,14 +236,14 @@ const SquareRootB: React.FC = () => {
         >
           Reset
         </button>
-        <input
+        {/* <input
           type="number"
           value={manualGuess}
           onChange={(e) => setManualGuess(e.target.value)}
           placeholder="Enter manual guess"
           style={{ marginRight: "10px" }}
         />
-        <button onClick={handleManualGuess}>Use Manual Guess</button>
+        <button onClick={handleManualGuess}>Use Manual Guess</button> */}
       </div>
       <div style={{ position: "relative", width: "100%", height: "400px" }}>
         <div style={squareStyle}></div>
@@ -232,58 +284,71 @@ const SquareRootB: React.FC = () => {
           {iterations[currentIteration]?.average.toFixed(6) || "N/A"}
         </p>
       </div>
-      <div style={{ marginTop: "40px" }}>
-        <h3>Convergence Graph</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={currentGraphData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="iteration" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Line type="monotone" dataKey="x" name="x₀" stroke="#8884d8" />
-            <Line
-              type="monotone"
-              dataKey="complementary"
-              name="S/x₀"
-              stroke="#82ca9d"
-            />
-            <Line
-              type="monotone"
-              dataKey="average"
-              name="Next x₀"
-              stroke="#ffc658"
-            />
-            <Line
-              type="monotone"
-              dataKey="sqrtS"
-              name="√S"
-              stroke="#ff7300"
-              strokeDasharray="5 5"
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      <AudioPlayer />
+
+      <p> let's learn the Babylonian Method Square algorithm!</p>
+
+      <p>
+        {" "}
+        Central concept: guess times the area divided by guess equals the area.
+      </p>
+
+      <p>
+        {" "}
+        Let's assign the operation area divided by guess to a variable that's
+        more intuitive; we'll call it Guess Complement.
+      </p>
+      <p>
+        {" "}
+        An important insight is that our guess times guess complement equals the
+        area, and that visually this is represented by a rectangle.
+      </p>
+
+      <p> Our goal is to turn this guess rectangle into the answer square.</p>
+      <p>
+        {" "}
+        We can do this iteratively by taking the average of guess and guess
+        complement because the average is closer to our answer, as the answer is
+        guaranteed to be between guess and guess complement.
+      </p>
+
+      <p>
+        {" "}
+        By taking the average and reassigning it to our next iteration's guess
+        and repeating the process, we converge towards our answer; the rectangle
+        becomes a square!
+      </p>
+      <p> ---</p>
+      <p>
+        {" "}
+        to find the square root of a number, simply guess! and then iteratively
+        improve your guess. the guess here is visualized as a rectanggle and
+        with this clever algorithm discovered by ancient Babylonians, we can
+        quickly converge to the square root of any number.`;
+      </p>
     </div>
   );
 };
 
-export default SquareRootB;
+export default BabylonianMethodSquareVisualizer;
 
+// let's learn the Babylonian Method Square algorithm!
 
+// Central concept:
+// guess times the area divided by guess  equals the area.
 
-// presentation script 
-// "Imagine you're an ancient Babylonian mathematician trying to find the square root of 100 using only simple arithmetic. Here's how you might do it:
+// We can see the guesses cancel.
 
-// Start with the number you want to find the square root of: 100. This is like having 100 square units of area.
-// Now, make a wild guess at the answer. Let's say you guess 3. (We know this is way too low, but that's what makes it interesting!)
-// Picture a rectangle with a width of 3 (your guess) and calculate its height by dividing 100 by 3. This gives you a very tall, skinny rectangle that's about 33.33 units tall.
-// Clearly, this tall rectangle isn't a square. But here's the clever part: take the average of the width (3) and height (33.33). This average, about 18.17, becomes your new guess.
-// Repeat the process. Now you have a rectangle that's 18.17 units wide and about 5.5 units tall (because 100 divided by 18.17 is about 5.5).
-// Average these new dimensions: (18.17 + 5.5) / 2 = about 11.84. This is your next guess.
-// Keep going, and watch as if by magic, the rectangle starts to look more and more like a square with each step.
-// After just a few more iterations, you'll find that both the width and height converge to 10, which is indeed the square root of 100.
+// Let's assign the operation area divided by guess to a variable that's more intuitive; we'll call it Guess Complement.
 
-// What's fascinating about this method is how quickly it homes in on the correct answer, even when starting with a terrible guess. It's like having a smart rubber band that always wants to form a square, no matter how oddly you stretch it initially.
-// This ancient technique, despite its simplicity, is so effective that it's still the basis for how some computers calculate square roots today. It's a testament to the ingenuity of ancient mathematicians and the enduring power of good ideas!"
-// This explanation, using a more extreme initial guess, helps to showcase the algorithm's ability to rapidly converge on the correct answer, making the process more visually interesting and demonstrating its robustness.
+// An important insight is that our guess times guess complement equals the area, and that visually this is represented by a rectangle.
+
+// Our goal is to turn this guess rectangle into the answer square.
+
+// We can do this iteratively by taking the average of guess and guess complement because the average is closer to our answer, as the answer is guaranteed to be between guess and guess complement.
+
+// By taking the average and reassigning it to our next iteration's guess and repeating the process, we converge towards our answer; the rectangle becomes a square!
+
+// ---
+
+// to find the square root of a number, simply guess! and then iteratively improve your guess. the guess here is visualized as a rectanggle and with this clever algorithm discovered by ancient Babylonians, we can quickly converge to the square root of any number.`;

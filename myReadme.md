@@ -23,7 +23,6 @@ That's essentially what binary search does with sorted lists of data in computer
 
 OlyMega Presentation Projects:
 Babylonian Method Square Visualizer
-Draggable Quadrilateral (Maybe but needs more explanation of the calculation as well as it'd be nice to have gently moving points so we can see the updating angles in real time)
 Volume Approximation
 Math Equation Solver
 Binary Search Visualizer
@@ -35,6 +34,7 @@ Quadratic Equation Solver (Maybe but needs more understanding and work)
 LinearRegressionVisualizer
 Quicksort Visualizer
 Binary Tree Sort
+BinarySearchTreeKonvaSearch
 
 
 make a presentation mode where each component is cycling through its operations in a GIF like way to quickly show it working.
