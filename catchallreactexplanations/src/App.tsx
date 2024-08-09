@@ -92,7 +92,7 @@ const projectList = [
     element: (
       <BubbleSortVisualizer
         initialArray={[64, 34, 25, 12, 22, 11, 90]}
-        speed={300}
+        initialSpeed={300}
       />
     ),
   },

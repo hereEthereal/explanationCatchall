@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
+import AudioPlayerComponent from '../Audio/AudioPlayerWrapper';
 
 interface BubbleSortVisualizerProps {
   initialArray?: number[];
-  speed?: number;
+  initialSpeed?: number;
 }
 
 type SortStep = {
@@ -16,13 +17,14 @@ type SortStep = {
 
 const BubbleSortVisualizer: React.FC<BubbleSortVisualizerProps> = ({
   initialArray = [],
-  speed = 500,
+  initialSpeed = 500,
 }) => {
   const [array, setArray] = useState<number[]>(initialArray);
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [sortingSteps, setSortingSteps] = useState<SortStep[]>([]);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isSorted, setIsSorted] = useState<boolean>(false);
+  const [speed, setSpeed] = useState<number>(initialSpeed);
 
   const generateRandomArray = useCallback((length: number = 10) => {
     const newArray = Array.from({ length }, () => Math.floor(Math.random() * 100) + 1);
@@ -41,7 +43,6 @@ const BubbleSortVisualizer: React.FC<BubbleSortVisualizerProps> = ({
       let swapped = false;
 
       for (let j = 0; j < n - i - 1; j++) {
-        // Comparing step
         steps.push({
           array: [...arr],
           comparing: [j, j + 1],
@@ -51,7 +52,6 @@ const BubbleSortVisualizer: React.FC<BubbleSortVisualizerProps> = ({
         });
 
         if (arr[j] > arr[j + 1]) {
-          // Swapping step
           [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
           swapped = true;
           steps.push({
@@ -66,7 +66,6 @@ const BubbleSortVisualizer: React.FC<BubbleSortVisualizerProps> = ({
 
       sortedCount++;
 
-      // Mark the last unsorted element as sorted
       steps.push({
         array: [...arr],
         comparing: [],
@@ -118,6 +117,10 @@ const BubbleSortVisualizer: React.FC<BubbleSortVisualizerProps> = ({
     setIsSorted(false);
   };
 
+  const handleSpeedChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSpeed(1000 - parseInt(event.target.value, 10));
+  };
+
   const currentStepData = sortingSteps[currentStep] || {
     array: array,
     comparing: [],
@@ -152,6 +155,20 @@ const BubbleSortVisualizer: React.FC<BubbleSortVisualizerProps> = ({
         </Button>
         <Button onClick={reset}>Reset</Button>
       </ControlPanel>
+
+      <SpeedControl>
+        <label htmlFor="speed-slider">Speed: </label>
+        <input
+          id="speed-slider"
+          type="range"
+          min="1"
+          max="990"
+          value={1000 - speed}
+          onChange={handleSpeedChange}
+        />
+      </SpeedControl>
+      <AudioPlayerComponent filePath={"./bubbleSort.mp3"} buttonText={"explain"} />
+
       <StepInfo>Step: {currentStep + 1} / {sortingSteps.length}</StepInfo>
       <StepDescription>{currentStepData.description}</StepDescription>
     </Container>
@@ -242,6 +259,17 @@ const Button = styled.button`
   &:disabled {
     background-color: #cccccc;
     cursor: not-allowed;
+  }
+`;
+
+const SpeedControl = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+
+  input[type="range"] {
+    width: 200px;
   }
 `;
 
