@@ -43,3 +43,50 @@ make a presentation mode where each component is cycling through its operations 
 ---
 multiple databases with multiple facts about the same person where the data is spread out over many sources, names, DOB, first last name, some are nullable, some name changes,
 DOB and middle name are the most permanent, SSNs, driver licenses, conviction date, incarceration date, court dates, 
+
+
+
+
+
+
+subgraph AlgorithmModule["Algorithm Module"]
+        A[Start] --> B[Initialize variables]
+        B --> C[Get input]
+        C --> D{i < numbers.length - 1}
+        D -->|Yes| E[j = i + 1]
+        E --> F{j < numbers.length}
+        F -->|Yes| G{Sum equals target?}
+        G -->|Yes| H[Found solution]
+        G -->|No| I[j++]
+        I --> F
+        F -->|No| J[i++]
+        J --> D
+        D -->|No| K[No solution found]
+        H --> L[End]
+        K --> L
+    end
+
+    subgraph UIModule["UI Module"]
+        M[Update i display]
+        N[Update j display]
+        O[Update sum display]
+        P[Update visualization]
+        Q[Handle user input]
+        R[Display result]
+    end
+
+    %% Interactions between modules
+    C --> Q
+    D --> M
+    F --> N
+    G --> O
+    I --> P
+    J --> P
+    H --> R
+    K --> R
+    
+    %% User interaction
+    Q --> B    
+
+ 
+     

@@ -8,6 +8,8 @@ const CytoDiagram = () => {
   const cyRef = useRef(null);
 
   useEffect(() => {
+    if (!cyRef.current) return;
+
     const cy = cytoscape({
       container: cyRef.current,
       elements: [
@@ -21,9 +23,11 @@ const CytoDiagram = () => {
         { data: { id: 'in', label: 'Interaction Handling' } },
         { data: { id: 'sb', label: 'Step Button' } },
         { data: { id: 'sp', label: 'Step Pointer' } },
-        { data: { id: 's1', label: 'Step 1: Check sum' } },
-        { data: { id: 's2', label: 'Step 2: Increment j' } },
-        { data: { id: 's3', label: 'Step 3: Increment i' } },
+        { data: { id: 's1', label: 'Step 1: Initialize' } },
+        { data: { id: 's2', label: 'Step 2: Check condition' } },
+        { data: { id: 's3', label: 'Step 3: Check sum' } },
+        { data: { id: 's4', label: 'Step 4: Increment j' } },
+        { data: { id: 's5', label: 'Step 5: Increment i' } },
         { data: { id: 'd', label: 'i < numbers.length - 1' } },
         { data: { id: 'e', label: 'j = i + 1' } },
         { data: { id: 'f', label: 'j < numbers.length' } },
@@ -39,7 +43,36 @@ const CytoDiagram = () => {
         { data: { id: 'r', label: 'Display result' } },
         { data: { id: 'as', label: 'App State' } },
 
-        // Edges
+        // Edges for step cycle
+        { data: { source: 's1', target: 's2', label: 'Next' } },
+        { data: { source: 's2', target: 's3', label: 'Next' } },
+        { data: { source: 's3', target: 's4', label: 'Next' } },
+        { data: { source: 's4', target: 's5', label: 'Next' } },
+        { data: { source: 's5', target: 's2', label: 'Next' } },
+
+        // Edges for algorithm logic
+        { data: { source: 's1', target: 'e', label: 'Initialize' } },
+        { data: { source: 's2', target: 'd', label: 'Check' } },
+        { data: { source: 's3', target: 'g', label: 'Check' } },
+        { data: { source: 's4', target: 'i', label: 'Perform' } },
+        { data: { source: 's5', target: 'j', label: 'Perform' } },
+        { data: { source: 'd', target: 'f', label: 'Yes' } },
+        { data: { source: 'f', target: 'g', label: 'Yes' } },
+        { data: { source: 'g', target: 'h', label: 'Yes' } },
+        { data: { source: 'g', target: 's4', label: 'No' } },
+        { data: { source: 'f', target: 's5', label: 'No' } },
+        { data: { source: 'd', target: 'k', label: 'No' } },
+        { data: { source: 'h', target: 'l' } },
+        { data: { source: 'k', target: 'l' } },
+
+        // UI update edges
+        { data: { source: 's3', target: 'o', label: 'Update' } },
+        { data: { source: 's4', target: 'n', label: 'Update' } },
+        { data: { source: 's5', target: 'm', label: 'Update' } },
+        { data: { source: 'h', target: 'r' } },
+        { data: { source: 'k', target: 'r' } },
+
+        // App structure edges
         { data: { source: 'main', target: 'ina' } },
         { data: { source: 'main', target: 'int' } },
         { data: { source: 'main', target: 'vc' } },
@@ -47,30 +80,6 @@ const CytoDiagram = () => {
         { data: { source: 'vc', target: 'lm' } },
         { data: { source: 'vc', target: 'in' } },
         { data: { source: 'sb', target: 'sp' } },
-        { data: { source: 'sp', target: 's1' } },
-        { data: { source: 's1', target: 's2' } },
-        { data: { source: 's2', target: 's1' } },
-        { data: { source: 's1', target: 's3' } },
-        { data: { source: 's3', target: 's1' } },
-        { data: { source: 'd', target: 'e', label: 'Yes' } },
-        { data: { source: 'e', target: 'f' } },
-        { data: { source: 'f', target: 'g', label: 'Yes' } },
-        { data: { source: 'g', target: 'h', label: 'Yes' } },
-        { data: { source: 'g', target: 'i', label: 'No' } },
-        { data: { source: 'i', target: 'f' } },
-        { data: { source: 'f', target: 'j', label: 'No' } },
-        { data: { source: 'j', target: 'd' } },
-        { data: { source: 'd', target: 'k', label: 'No' } },
-        { data: { source: 'h', target: 'l' } },
-        { data: { source: 'k', target: 'l' } },
-        { data: { source: 's1', target: 'g' } },
-        { data: { source: 's2', target: 'i' } },
-        { data: { source: 's3', target: 'j' } },
-        { data: { source: 's1', target: 'o' } },
-        { data: { source: 's2', target: 'n' } },
-        { data: { source: 's3', target: 'm' } },
-        { data: { source: 'h', target: 'r' } },
-        { data: { source: 'k', target: 'r' } },
         { data: { source: 'main', target: 'as' } },
         { data: { source: 'ina', target: 'as' } },
         { data: { source: 'int', target: 'as' } },
@@ -84,7 +93,11 @@ const CytoDiagram = () => {
             'text-halign': 'center',
             'shape': 'roundrectangle',
             'background-color': '#ddd',
-            'padding': '10px'
+            'padding': '10px',
+            'font-size': '10px',
+            'width': 'label',
+            'height': 'label',
+            'text-wrap': 'wrap'
           }
         },
         {
@@ -95,7 +108,8 @@ const CytoDiagram = () => {
             'target-arrow-color': '#999',
             'target-arrow-shape': 'triangle',
             'curve-style': 'bezier',
-            'label': 'data(label)'
+            'label': 'data(label)',
+            'font-size': '8px'
           }
         },
         {
@@ -105,13 +119,22 @@ const CytoDiagram = () => {
             'target-arrow-color': '#ff0000',
             'width': 4
           }
+        },
+        {
+          selector: 'edge[label = "Next"]',
+          style: {
+            'line-color': '#4CAF50',
+            'target-arrow-color': '#4CAF50'
+          }
         }
       ],
       layout: {
         name: 'dagre',
         rankDir: 'TB',
-        nodeSep: 50,
-        rankSep: 100
+        nodeSep: 70,
+        rankSep: 120,
+        fit: true,
+        padding: 50
       }
     });
 
@@ -123,6 +146,9 @@ const CytoDiagram = () => {
     cy.on('mouseout', 'node', function(e) {
       e.target.outgoers('edge').removeClass('highlighted');
     });
+
+    // Fit the graph to the container
+    cy.fit();
 
     // Cleanup function
     return () => {
