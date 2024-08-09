@@ -13,6 +13,7 @@
   "description": "",
   "dependencies": {
     "cytoscape": "^3.30.2",
+    "cytoscape-dagre": "^2.5.0",
     "cytoscape-react": "^4.0.0",
     "install": "^0.13.0",
     "npm": "^10.8.2",
