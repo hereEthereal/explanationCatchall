@@ -1,0 +1,192 @@
+import { parse, Node } from "acorn";
+import * as walk from "acorn-walk";
+import cytoscape, { Core } from "cytoscape";
+import dagre from "cytoscape-dagre";
+
+// Register the dagre layout
+cytoscape.use(dagre);
+
+type CFGNode = {
+  id: number;
+  type: string;
+  label: string;
+  node: Node;
+  next?: number[];
+};
+
+class TSAlgorithmAnalyzer {
+  private ast: Node;
+  private cfg: Map<number, CFGNode>;
+  private dataFlow: Map<string, string>;
+  private nodeId: number;
+  private sourceCode: string;
+
+  constructor(functionString: string) {
+    // Remove TypeScript types from the function string
+    this.sourceCode = functionString.replace(/:\s*([^=,)]+)(\s*[=,)])/g, "$2");
+
+    this.ast = parse(this.sourceCode, {
+      ecmaVersion: "latest",
+      sourceType: "module",
+    });
+    this.cfg = new Map();
+    this.dataFlow = new Map();
+    this.nodeId = 0;
+  }
+
+  generateCFG(): void {
+    const addNode = (node: Node, type: string, label: string): number => {
+      const id = this.nodeId++;
+      this.cfg.set(id, { id, type, label, node });
+      return id;
+    };
+
+    const addEdge = (from: number, to: number): void => {
+      const fromNode = this.cfg.get(from);
+      if (fromNode) {
+        if (!fromNode.next) fromNode.next = [];
+        fromNode.next.push(to);
+      }
+    };
+
+    walk.recursive(this.ast, null, {
+      FunctionDeclaration: (node: any, state: any, c: any) => {
+        const funcId = addNode(node, "Function", `Function: ${node.id.name}`);
+        c(node.body, funcId);
+      },
+      BlockStatement: (node: any, state: any, c: any) => {
+        node.body.forEach((stmt: Node) => c(stmt, state));
+      },
+      ForStatement: (node: any, state: any, c: any) => {
+        const forId = addNode(node, "For", `For: ${this.getSource(node.init)}`);
+        if (state) addEdge(state, forId);
+        c(node.body, forId);
+      },
+      IfStatement: (node: any, state: any, c: any) => {
+        const ifId = addNode(node, "If", `If: ${this.getSource(node.test)}`);
+        if (state) addEdge(state, ifId);
+        c(node.consequent, ifId);
+        if (node.alternate) c(node.alternate, ifId);
+      },
+      ReturnStatement: (node: any, state: any) => {
+        const returnId = addNode(
+          node,
+          "Return",
+          `Return: ${this.getSource(node.argument)}`
+        );
+        if (state) addEdge(state, returnId);
+      },
+    });
+  }
+
+  analyzeDataFlow(): void {
+    walk.simple(this.ast, {
+      VariableDeclarator: (node: any) => {
+        this.dataFlow.set(node.id.name, this.getSource(node.init));
+      },
+      AssignmentExpression: (node: any) => {
+        this.dataFlow.set(
+          this.getSource(node.left),
+          this.getSource(node.right)
+        );
+      },
+      UpdateExpression: (node: any) => {
+        this.dataFlow.set(
+          this.getSource(node.argument),
+          `${this.getSource(node.argument)} ${node.operator}`
+        );
+      },
+    });
+  }
+
+  private getSource(node: Node | null): string {
+    if (!node) return "";
+    return this.sourceCode.slice(node.start, node.end);
+  }
+
+  generateCytoscapeElements(): cytoscape.ElementDefinition[] {
+    const elements: cytoscape.ElementDefinition[] = [];
+    this.cfg.forEach((node) => {
+      elements.push({ data: { id: node.id.toString(), label: node.label } });
+      if (node.next) {
+        node.next.forEach((nextId) => {
+          elements.push({
+            data: { source: node.id.toString(), target: nextId.toString() },
+          });
+        });
+      }
+    });
+    return elements;
+  }
+
+  visualize(container: HTMLElement): Core {
+    const elements = this.generateCytoscapeElements();
+    return cytoscape({
+      container: container,
+      elements: elements,
+      style: [
+        {
+          selector: "node",
+          style: {
+            "background-color": "#666",
+            label: "data(label)",
+            color: "#fff",
+            "text-valign": "center",
+            "text-halign": "center",
+            "text-wrap": "wrap",
+          },
+        },
+        {
+          selector: "edge",
+          style: {
+            width: 3,
+            "line-color": "#ccc",
+            "target-arrow-color": "#ccc",
+            "target-arrow-shape": "triangle",
+            "curve-style": "bezier",
+          },
+        },
+      ],
+      layout: {
+        name: "dagre",
+      },
+    });
+  }
+
+  printDataFlow(): void {
+    console.log("Data Flow Analysis:");
+    this.dataFlow.forEach((value, key) => {
+      console.log(`${key}: ${value}`);
+    });
+  }
+
+  getCFG(): Map<number, CFGNode> {
+    return this.cfg;
+  }
+}
+
+export const createAnalyzer = (functionString: string): TSAlgorithmAnalyzer => new TSAlgorithmAnalyzer(functionString);
+
+// For running directly
+if (import.meta.url === new URL(import.meta.url).href) {
+  const twoSum = `
+  function twoSum(numbers, target) {
+    for (let i = 0; i < numbers.length; i++) {
+      for (let j = i + 1; j < numbers.length; j++) {
+        if (numbers[i] + numbers[j] === target) {
+          return [i, j];
+        }
+      }
+    }
+    return [];
+  }
+  `;
+
+  const analyzer = new TSAlgorithmAnalyzer(twoSum);
+  analyzer.generateCFG();
+  analyzer.analyzeDataFlow();
+  analyzer.printDataFlow();
+  
+  console.log("Control Flow Graph:");
+  console.log(JSON.stringify([...analyzer.getCFG()], null, 2));
+}
