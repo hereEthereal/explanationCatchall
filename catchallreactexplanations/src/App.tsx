@@ -44,6 +44,7 @@ import BinarySearchTreeKonvaSearch from "./projects/BinaryTreeKonvaSearch";
 import AVLTreeKonva from "./projects/AVLTreeKonva";
 import BabylonianMethodSquareVisualizer from "./projects/BabylonianMethodSquareVisualizer";
 import BinarySearchTreeKonva from "./projects/BinaryTreeKonva";
+import TwoSumNestedLoop from './projects/2SumNestedLoop';
 
 const projectList = [
   { name: "App A", path: "/app-a", element: <AppA /> },
@@ -213,6 +214,11 @@ const projectList = [
     name: "AVLTreeKonva BROKEN",
     path: "AVLTreeKonva",
     element: <AVLTreeKonva />,
+  },  
+  {
+    name: "TwoSumNestedLoop",
+    path: "TwoSumNestedLoop",
+    element: <TwoSumNestedLoop />,
   },  
 ];
 
