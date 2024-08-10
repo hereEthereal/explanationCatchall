@@ -17,7 +17,7 @@ type CFGNode = {
 class TSAlgorithmAnalyzer {
   private ast: Node;
   private cfg: Map<number, CFGNode>;
-  private dataFlow: Map<string, string>;
+  private dataFlow: Array<[string, string, number]> = [];
   private nodeId: number;
   private sourceCode: string;
 
@@ -30,7 +30,6 @@ class TSAlgorithmAnalyzer {
       sourceType: "module",
     });
     this.cfg = new Map();
-    this.dataFlow = new Map();
     this.nodeId = 0;
   }
 
@@ -79,26 +78,59 @@ class TSAlgorithmAnalyzer {
     });
   }
 
+
   analyzeDataFlow(): void {
-    walk.simple(this.ast, {
-      VariableDeclarator: (node: any) => {
-        this.dataFlow.set(node.id.name, this.getSource(node.init));
+    const visitors: walk.RecursiveVisitors<{ loopDepth: number }> = {
+      FunctionDeclaration: (node: any, state, c) => {
+        console.log("Visiting FunctionDeclaration");
+        this.dataFlow.push(["function_name", node.id.name, node.start]);
+        this.dataFlow.push(["function_params", node.params.map((param: any) => param.name).join(", "), node.start]);
+        c(node.body, state);
       },
-      AssignmentExpression: (node: any) => {
-        this.dataFlow.set(
-          this.getSource(node.left),
-          this.getSource(node.right)
-        );
+      ForStatement: (node: any, state, c) => {
+        console.log("Visiting ForStatement");
+        state.loopDepth++;
+        const forLoop = this.getSource(node.init) + "; " + 
+                        this.getSource(node.test) + "; " + 
+                        this.getSource(node.update);
+        const loopType = state.loopDepth === 1 ? "outer_for_loop" : "inner_for_loop";
+        this.dataFlow.push([loopType, forLoop, node.start]);
+        
+        if (node.update && node.update.type === "UpdateExpression") {
+          const updateType = state.loopDepth === 1 ? "i_update" : "j_update";
+          this.dataFlow.push([updateType, this.getSource(node.update), node.update.start]);
+        }
+
+        c(node.body, state);
+        state.loopDepth--;
       },
-      UpdateExpression: (node: any) => {
-        this.dataFlow.set(
-          this.getSource(node.argument),
-          `${this.getSource(node.argument)} ${node.operator}`
-        );
+      IfStatement: (node: any, state, c) => {
+        console.log("Visiting IfStatement");
+        this.dataFlow.push(["if_comparison", this.getSource(node.test), node.start]);
+        c(node.consequent, state);
+        if (node.alternate) c(node.alternate, state);
       },
-    });
+      ReturnStatement: (node: any, state, c) => {
+        console.log("Visiting ReturnStatement");
+        const returnType = state.loopDepth > 0 ? "inner_return" : "last_return";
+        this.dataFlow.push([returnType, this.getSource(node.argument), node.start]);
+      },
+      BlockStatement: (node: any, state, c) => {
+        console.log("Visiting BlockStatement");
+        node.body.forEach((stmt: Node) => c(stmt, state));
+      }
+    };
+
+    console.log("Starting AST traversal");
+    walk.recursive(this.ast, { loopDepth: 0 }, visitors);
+    console.log("Finished AST traversal");
+
+    this.sortDataFlow();
   }
 
+  private sortDataFlow(): void {
+    this.dataFlow.sort((a, b) => a[2] - b[2]);
+  }
   private getSource(node: Node | null): string {
     if (!node) return "";
     return this.sourceCode.slice(node.start, node.end);
@@ -155,7 +187,7 @@ class TSAlgorithmAnalyzer {
 
   printDataFlow(): void {
     console.log("Data Flow Analysis:");
-    this.dataFlow.forEach((value, key) => {
+    this.dataFlow.forEach(([key, value]) => {
       console.log(`${key}: ${value}`);
     });
   }
@@ -164,6 +196,8 @@ class TSAlgorithmAnalyzer {
     return this.cfg;
   }
 }
+
+
 
 export const createAnalyzer = (functionString: string): TSAlgorithmAnalyzer => new TSAlgorithmAnalyzer(functionString);
 
@@ -182,11 +216,13 @@ if (import.meta.url === new URL(import.meta.url).href) {
   }
   `;
 
+  
+
   const analyzer = new TSAlgorithmAnalyzer(twoSum);
   analyzer.generateCFG();
   analyzer.analyzeDataFlow();
   analyzer.printDataFlow();
   
-  console.log("Control Flow Graph:");
-  console.log(JSON.stringify([...analyzer.getCFG()], null, 2));
+  // console.log("Control Flow Graph:");
+  // console.log(JSON.stringify([...analyzer.getCFG()], null, 2));
 }
