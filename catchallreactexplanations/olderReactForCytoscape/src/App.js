@@ -9,6 +9,7 @@ import DFAVisualization  from './DFAVisualization';
 import MyTwoSumGraphVisualization  from './MyDFAVisualization.jsx';
 import CytoDiagram from './cytoscapeDiagram';
 import GridGraph from "./GridGraph"
+import ArrayGraph from "./ArrayGraph"
 
 const App = () => {
   return (
@@ -17,7 +18,8 @@ const App = () => {
 
       {/* <TwoSumSolver /> */}
       {/* <CytoDiagram /> */}
-      <MyTwoSumGraphVisualization />
+      <ArrayGraph data={[1,2,3,4,5,4,3,2,1]} highlights={[1,4] } />
+      {/* <MyTwoSumGraphVisualization /> */}
       {/* <DFAVisualization /> */}
       {/* <CytoscapeShapeTransformer /> */}
       {/* <GridGraph /> */}

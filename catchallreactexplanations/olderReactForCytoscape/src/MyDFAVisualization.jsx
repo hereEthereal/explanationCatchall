@@ -51,7 +51,6 @@ const MyTwoSumGraphVisualization = () => {
       data: { source: "fooPointer", target: "fooWrapper", label: "points to" },
     },
 
-    // Edges forming a cycle
     { data: { source: "fooA", target: "fooB" } },
     { data: { source: "fooB", target: "fooC" } },
     { data: { source: "fooC", target: "fooA" } },
@@ -86,6 +85,8 @@ const MyTwoSumGraphVisualization = () => {
     // { data: { id: 'solution-found', label: 'Found solution' } },
     // { data: { id: 'no-solution', label: 'No solution found' } },
     // { data: { id: 'end', label: 'End' } },
+
+
 
     // Edges
     { data: { source: "step1", target: "step2", label: "Next" } },
