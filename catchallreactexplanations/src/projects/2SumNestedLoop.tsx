@@ -1,51 +1,33 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import styled from 'styled-components';
 
-// Types
-type NumberPair = [number, number] | null;
-
-interface AppState {
+interface TwoSumProps {
   numbers: number[];
   target: number;
-  currentI: number;
-  currentJ: number;
-  solution: NumberPair;
-  isRunning: boolean;
-  executionLog: string[];
+  isStartButtonPressed: boolean;
   speed: number;
 }
 
-// Styled Components
-const AppContainer = styled.div`
+type NumberPair = [number, number] | null;
+
+interface VisualizationState {
+  currentI: number;
+  currentJ: number;
+  solution: NumberPair;
+  isComplete: boolean;
+  executionLog: string[];
+}
+
+const Container = styled.div`
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
   font-family: Arial, sans-serif;
 `;
 
-const Title = styled.h1`
+const Title = styled.h2`
   text-align: center;
   color: #333;
-`;
-
-const InputSection = styled.div`
-  margin-bottom: 20px;
-`;
-
-const Input = styled.input`
-  margin-right: 10px;
-  padding: 5px;
-`;
-
-const Button = styled.button`
-  padding: 5px 10px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  cursor: pointer;
-  &:hover {
-    background-color: #0056b3;
-  }
 `;
 
 const VisualizationArea = styled.div`
@@ -73,128 +55,102 @@ const ExecutionLog = styled.div`
   margin-bottom: 20px;
 `;
 
-const SpeedControl = styled.div`
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;
-`;
-
-const SpeedSlider = styled.input`
-  margin-right: 10px;
-`;
-
-// Main App Component
-const TwoSumNestedLoop: React.FC = () => {
-  const [state, setState] = useState<AppState>({
-    numbers: [],
-    target: 0,
+const TwoSumNestedLoop: React.FC<TwoSumProps> = ({ numbers, target, isStartButtonPressed, speed }) => {
+  const [state, setState] = useState<VisualizationState>({
     currentI: 0,
     currentJ: 1,
     solution: null,
-    isRunning: false,
+    isComplete: false,
     executionLog: [],
-    speed: 1000, // Default speed: 1 second
   });
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isStartButtonPressedRef = useRef(isStartButtonPressed);
 
-  const [inputNumbers, setInputNumbers] = useState('');
-  const [inputTarget, setInputTarget] = useState('');
-
-  const handleStart = () => {
-    const numbers = inputNumbers.split(',').map(Number);
-    const target = Number(inputTarget);
+  const reset = useCallback(() => {
     setState({
-      ...state,
-      numbers,
-      target,
       currentI: 0,
       currentJ: 1,
       solution: null,
-      isRunning: true,
+      isComplete: false,
       executionLog: [],
     });
-  };
-
-  const handleStep = useCallback(() => {
-    const { numbers, target, currentI, currentJ } = state;
-    if (currentI >= numbers.length - 1) {
-      setState(prevState => ({ ...prevState, isRunning: false, solution: null }));
-      return;
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
     }
-
-    const sum = numbers[currentI] + numbers[currentJ];
-    const newLog = [...state.executionLog, `Comparing ${numbers[currentI]} + ${numbers[currentJ]} = ${sum}`];
-
-    if (sum === target) {
-      setState(prevState => ({
-        ...prevState,
-        solution: [currentI, currentJ],
-        isRunning: false,
-        executionLog: [...newLog, `Solution found: ${numbers[currentI]} + ${numbers[currentJ]} = ${target}`],
-      }));
-    } else if (currentJ < numbers.length - 1) {
-      setState(prevState => ({
-        ...prevState,
-        currentJ: currentJ + 1,
-        executionLog: newLog,
-      }));
-    } else {
-      setState(prevState => ({
-        ...prevState,
-        currentI: currentI + 1,
-        currentJ: currentI + 2,
-        executionLog: newLog,
-      }));
-    }
-  }, [state]);
+  }, []);
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (state.isRunning) {
-      timer = setTimeout(handleStep, state.speed);
-    }
-    return () => clearTimeout(timer);
-  }, [state.isRunning, state.currentI, state.currentJ, state.speed, handleStep]);
+    reset();
+  }, [numbers, target, reset]);
 
-  const handleSpeedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newSpeed = Number(e.target.value);
-    setState(prevState => ({ ...prevState, speed: newSpeed }));
-  };
+  const step = useCallback(() => {
+    setState(prevState => {
+      const { currentI, currentJ, executionLog } = prevState;
+      
+      if (currentI >= numbers.length - 1) {
+        return { 
+          ...prevState, 
+          solution: null, 
+          isComplete: true,
+          executionLog: [...executionLog, "No solution found"] 
+        };
+      }
+
+      const sum = numbers[currentI] + numbers[currentJ];
+      const newLog = [...executionLog, `Comparing ${numbers[currentI]} + ${numbers[currentJ]} = ${sum}`];
+
+      if (sum === target) {
+        return {
+          ...prevState,
+          solution: [currentI, currentJ],
+          isComplete: true,
+          executionLog: [...newLog, `Solution found: ${numbers[currentI]} + ${numbers[currentJ]} = ${target}`],
+        };
+      } else if (currentJ < numbers.length - 1) {
+        return {
+          ...prevState,
+          currentJ: currentJ + 1,
+          executionLog: newLog,
+        };
+      } else {
+        return {
+          ...prevState,
+          currentI: currentI + 1,
+          currentJ: currentI + 2,
+          executionLog: newLog,
+        };
+      }
+    });
+  }, [numbers, target]);
+
+  useEffect(() => {
+    if (isStartButtonPressed && !isStartButtonPressedRef.current) {
+      isStartButtonPressedRef.current = true;
+      reset();
+    } else if (!isStartButtonPressed) {
+      isStartButtonPressedRef.current = false;
+    }
+  }, [isStartButtonPressed, reset]);
+
+  useEffect(() => {
+    if (isStartButtonPressed && !state.isComplete) {
+      timeoutRef.current = setTimeout(() => {
+        step();
+      }, speed);
+    }
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [isStartButtonPressed, state, speed, step]);
 
   return (
-    <AppContainer>
-      <Title>2Sum Problem Visualizer</Title>
-      <InputSection>
-        <Input
-          type="text"
-          value={inputNumbers}
-          onChange={(e) => setInputNumbers(e.target.value)}
-          placeholder="Enter numbers (comma-separated)"
-        />
-        <Input
-          type="number"
-          value={inputTarget}
-          onChange={(e) => setInputTarget(e.target.value)}
-          placeholder="Enter target sum"
-        />
-        <Button onClick={handleStart}>Start</Button>
-        <Button onClick={handleStep} disabled={!state.isRunning}>Step</Button>
-        <Button onClick={() => setState(prevState => ({ ...prevState, isRunning: !prevState.isRunning }))}>
-          {state.isRunning ? 'Pause' : 'Play'}
-        </Button>
-      </InputSection>
-      <SpeedControl>
-        <SpeedSlider
-          type="range"
-          min="100"
-          max="2000"
-          step="100"
-          value={state.speed}
-          onChange={handleSpeedChange}
-        />
-        <span>Speed: {state.speed}ms</span>
-      </SpeedControl>
+    <Container>
+      <Title>Two Sum Nested Loop Visualizer</Title>
+      <p>Target: {target}</p>
       <VisualizationArea>
-        {state.numbers.map((num, index) => (
+        {numbers.map((num, index) => (
           <NumberBox
             key={index}
             isHighlighted={index === state.currentI || index === state.currentJ}
@@ -203,17 +159,19 @@ const TwoSumNestedLoop: React.FC = () => {
           </NumberBox>
         ))}
       </VisualizationArea>
-      <div>Target Sum: {state.target}</div>
-      <div>Current Sum: {state.numbers[state.currentI] + state.numbers[state.currentJ]}</div>
+      <div>Current Sum: {numbers[state.currentI] + numbers[state.currentJ]}</div>
       {state.solution && (
-        <div>Solution Found: {state.numbers[state.solution[0]]} + {state.numbers[state.solution[1]]} = {state.target}</div>
+        <div>Solution Found: {numbers[state.solution[0]]} + {numbers[state.solution[1]]} = {target}</div>
       )}
-      <ExecutionLog>
+      {/* <ExecutionLog>
         {state.executionLog.map((log, index) => (
           <div key={index}>{log}</div>
         ))}
-      </ExecutionLog>
-    </AppContainer>
+      </ExecutionLog> */}
+      {state.isComplete && !state.solution && (
+        <p>No solution found</p>
+      )}
+    </Container>
   );
 };
 

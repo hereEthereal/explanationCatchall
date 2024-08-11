@@ -45,6 +45,10 @@ import AVLTreeKonva from "./projects/AVLTreeKonva";
 import BabylonianMethodSquareVisualizer from "./projects/BabylonianMethodSquareVisualizer";
 import BinarySearchTreeKonva from "./projects/BinaryTreeKonva";
 import TwoSumNestedLoop from './projects/2SumNestedLoop';
+import TwoSumEfficientVisualizer from './projects/TwoSumEfficientVisualizer';
+import TwoSumSortedPointerVisualizer from './projects/TwoSumSortedPointerVisualizer';
+import MyTwoSum from './projects/MyTwoSum';
+import TwoSumWrapper from './projects/TwoSumWrapper';
 
 const projectList = [
   { name: "App A", path: "/app-a", element: <AppA /> },
@@ -218,7 +222,12 @@ const projectList = [
   {
     name: "TwoSumNestedLoop",
     path: "TwoSumNestedLoop",
-    element: <TwoSumNestedLoop />,
+    element: <TwoSumNestedLoop numbers={[1,2,3,4,100,5,6,50,7,8,9]} target={150} isStartButtonPressed={false} speed={1} />,
+  },  
+  {
+    name: "TwoSumWrapper",
+    path: "TwoSumWrapper",
+    element: <TwoSumWrapper />,
   },  
 ];
 
@@ -243,6 +252,21 @@ const presentationList = [
     path: "BinarySearchTreeKonvaSearch",
     element: <BinarySearchTreeKonvaSearch />,
   },  
+  {
+    name: "TwoSumEfficientVisualizer",
+    path: "TwoSumEfficientVisualizer",
+    element: <TwoSumEfficientVisualizer numbers={[1,2,3,4,100,5,6,50,7,8,9]} target={150} isStartButtonPressed={false} speed={1}/>,
+  },  
+  {
+    name: "TwoSumSortedPointerVisualizer",
+    path: "TwoSumSortedPointerVisualizer",
+    element: <TwoSumSortedPointerVisualizer numbers={[1,2,3,4,100,5,6,50,7,8,9]} target={150} isStartButtonPressed={false} speed={1} />,
+  },   
+  {
+    name: "MyTwoSum",
+    path: "MyTwoSum",
+    element: <MyTwoSum />,
+  }, 
 ];
 
 const Home: React.FC = () => (
