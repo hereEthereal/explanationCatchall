@@ -1,12 +1,19 @@
 import React, { useRef, useEffect, useState } from "react";
 import styled from "styled-components";
 import EntityDetector, { EntityDetectorProps } from "./EntityDetector";
+import EntityConverter, { EntityConverterProps } from "./EntityConverter";
 
 interface LightParticle {
   x: number;
   y: number;
   speed: number;
   angle: number;
+}
+
+interface UsableEnergy {
+  id: number;
+  x: number;
+  y: number;
 }
 
 const SimulationContainer = styled.div`
@@ -59,6 +66,7 @@ const InfoPanel = styled.div`
 
 const WorldSimulation: React.FC = () => {
   const [particles, setParticles] = useState<LightParticle[]>([]);
+  const [usableEnergy, setUsableEnergy] = useState<UsableEnergy[]>([]);
   const [baseSpeed, setBaseSpeed] = useState<number>(1);
   const [spawnRate, setSpawnRate] = useState<number>(1);
   const [entityDetectors, setEntityDetectors] = useState<EntityDetectorProps[]>([
@@ -67,6 +75,11 @@ const WorldSimulation: React.FC = () => {
     { id: 3, x: 500, y: 300, radius: 20, isDetecting: false },
   ]);
 
+    const [entityConverters, setEntityConverters] = useState<EntityConverterProps[]>([
+    { id: 1, x: 200, y: 150, size: 10 },
+    { id: 2, x: 400, y: 250, size: 10 },
+    { id: 3, x: 600, y: 350, size: 10 },
+  ]);
   const canvasWidth = 800;
   const canvasHeight = 600;
 
@@ -85,6 +98,9 @@ const WorldSimulation: React.FC = () => {
   };
 
   useEffect(() => {
+    let particleId = 0;
+    let usableEnergyId = 0;
+
     const updateInterval = setInterval(() => {
       setParticles((prevParticles) => {
         const updatedParticles = prevParticles
@@ -123,8 +139,30 @@ const WorldSimulation: React.FC = () => {
 
         setEntityDetectors(updatedDetectors);
 
-        return updatedParticles;
-      });
+
+        // Handle conversion process
+        const newUsableEnergy: UsableEnergy[] = [];
+        const remainingParticles = updatedParticles.filter((particle) => {
+          for (const converter of entityConverters) {
+            const distance = Math.sqrt(
+              Math.pow(converter.x - particle.x, 2) +
+                Math.pow(converter.y - particle.y, 2)
+            );
+            if (distance <= converter.size / 2) {
+              newUsableEnergy.push({
+                id: usableEnergyId++,
+                x: converter.x + converter.size,
+                y: converter.y,
+              });
+              return false; // Remove this particle
+            }
+          }
+          return true; // Keep this particle
+        });
+
+        setUsableEnergy((prevUsableEnergy) => [...prevUsableEnergy, ...newUsableEnergy]);
+
+        return remainingParticles;      });
     }, 16); // 60 FPS
 
     const spawnInterval = setInterval(() => {
@@ -173,6 +211,9 @@ const WorldSimulation: React.FC = () => {
         {entityDetectors.map((detector) => (
           <EntityDetector key={detector.id} {...detector} />
         ))}
+        {entityConverters.map((converter) => (
+          <EntityConverter key={converter.id} {...converter} />
+        ))}
         {particles.map((particle, index) => (
           <circle
             key={index}
@@ -182,6 +223,16 @@ const WorldSimulation: React.FC = () => {
             fill="yellow"
             stroke="black"
             strokeWidth={1}
+          />
+        ))}
+         {usableEnergy.map((energy) => (
+          <rect
+            key={energy.id}
+            x={energy.x}
+            y={energy.y}
+            width={8}
+            height={8}
+            fill="purple"
           />
         ))}
       </SVGCanvas>
