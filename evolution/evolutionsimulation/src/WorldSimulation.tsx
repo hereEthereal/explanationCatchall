@@ -1,5 +1,6 @@
-import React, { useRef, useEffect, useState } from 'react';
-import styled from 'styled-components';
+import React, { useRef, useEffect, useState } from "react";
+import styled from "styled-components";
+import EntityDetector, { EntityDetectorProps } from "./EntityDetector";
 
 interface LightParticle {
   x: number;
@@ -24,7 +25,7 @@ const Title = styled.h1`
   margin-bottom: 16px;
 `;
 
-const Canvas = styled.canvas`
+const SVGCanvas = styled.svg`
   border: 1px solid #d1d5db;
 `;
 
@@ -46,90 +47,102 @@ const SliderLabel = styled.label`
   width: 120px;
 `;
 
+const InfoPanel = styled.div`
+  width: 300px;
+  height: 600px;
+  margin-left: 20px;
+  padding: 10px;
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  overflow-y: auto;
+`;
+
 const WorldSimulation: React.FC = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const particlesRef = useRef<LightParticle[]>([]);
+  const [particles, setParticles] = useState<LightParticle[]>([]);
   const [baseSpeed, setBaseSpeed] = useState<number>(1);
   const [spawnRate, setSpawnRate] = useState<number>(1);
+  const [entityDetectors, setEntityDetectors] = useState<EntityDetectorProps[]>([
+    { id: 1, x: 100, y: 100, radius: 20, isDetecting: false },
+    { id: 2, x: 300, y: 200, radius: 20, isDetecting: false },
+    { id: 3, x: 500, y: 300, radius: 20, isDetecting: false },
+  ]);
 
   const canvasWidth = 800;
   const canvasHeight = 600;
-  
+
   // Energy Nexus (EN) configuration
   const enWidth = 100;
   const enHeight = 80;
-  const enX = canvasWidth / 2 - enWidth / 2; // Centered horizontally
-  const enY = Math.floor(canvasHeight * 2 / 3); // Positioned 2/3 down the screen
+  const enX = canvasWidth / 2 - enWidth / 2;
+  const enY = Math.floor((canvasHeight * 2) / 3);
+
+  const entityColors = {
+    EN: "rgba(0, 255, 0, 0.2)",
+    ED: "blue",
+    EM: "red",
+    EC: "purple",
+    ECv: "orange",
+  };
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const updateInterval = setInterval(() => {
+      setParticles((prevParticles) => {
+        const updatedParticles = prevParticles
+          .map((particle) => ({
+            ...particle,
+            x: particle.x + Math.cos(particle.angle) * particle.speed,
+            y: particle.y + Math.sin(particle.angle) * particle.speed,
+          }))
+          .filter(
+            (particle) =>
+              particle.x >= 0 &&
+              particle.x <= canvasWidth &&
+              particle.y >= 0 &&
+              particle.y <= canvasHeight
+          );
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+        const updatedDetectors = entityDetectors.map((detector) => {
+          const isDetecting = updatedParticles.some(
+            (particle) =>
+              Math.sqrt(
+                Math.pow(detector.x - particle.x, 2) +
+                  Math.pow(detector.y - particle.y, 2)
+              ) <= detector.radius
+          );
 
-    let animationFrameId: number;
+          if (isDetecting !== detector.isDetecting) {
+            console.log(
+              `Detector ${detector.id} is ${
+                isDetecting ? "now detecting" : "no longer detecting"
+              } a particle`
+            );
+          }
 
-    const render = () => {
-      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+          return { ...detector, isDetecting };
+        });
 
-      // Draw EN
-      ctx.fillStyle = 'rgba(0, 255, 0, 0.2)';
-      ctx.fillRect(enX, enY, enWidth, enHeight);
-      ctx.strokeStyle = 'rgba(0, 255, 0, 0.8)';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(enX, enY, enWidth, enHeight);
+        setEntityDetectors(updatedDetectors);
 
-      // Update and draw particles
-      particlesRef.current = particlesRef.current.filter((particle) => {
-        particle.x += Math.cos(particle.angle) * particle.speed;
-        particle.y += Math.sin(particle.angle) * particle.speed;
-
-        ctx.beginPath();
-        ctx.arc(particle.x, particle.y, 4, 0, 2 * Math.PI);
-        ctx.fillStyle = 'yellow';
-        ctx.fill();
-        ctx.strokeStyle = 'black';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        // Remove particle if it's inside the EN or out of bounds
-        return !(
-          particle.x >= enX &&
-          particle.x <= enX + enWidth &&
-          particle.y >= enY &&
-          particle.y <= enY + enHeight
-        ) && (
-          particle.x >= 0 &&
-          particle.x <= canvasWidth &&
-          particle.y >= 0 &&
-          particle.y <= canvasHeight
-        );
+        return updatedParticles;
       });
-
-      console.log(`Particles: ${particlesRef.current.length}`);
-
-      animationFrameId = requestAnimationFrame(render);
-    };
-
-    render();
+    }, 16); // 60 FPS
 
     const spawnInterval = setInterval(() => {
-      for (let i = 0; i < spawnRate; i++) {
-        const newParticle: LightParticle = {
-          x: Math.random() * canvasWidth,
-          y: 0,
-          speed: baseSpeed + Math.random() * baseSpeed,
-          angle: Math.PI / 2 + (Math.random() - 0.5) * (Math.PI / 4),
-        };
-
-        particlesRef.current.push(newParticle);
-      }
-      console.log(`Spawned ${spawnRate} particles`);
+      setParticles((prevParticles) => [
+        ...prevParticles,
+        ...Array(spawnRate)
+          .fill(null)
+          .map(() => ({
+            x: Math.random() * canvasWidth,
+            y: 0,
+            speed: baseSpeed + Math.random() * baseSpeed,
+            angle: Math.PI / 2 + (Math.random() - 0.5) * (Math.PI / 4),
+          })),
+      ]);
     }, 1000);
 
     return () => {
-      cancelAnimationFrame(animationFrameId);
+      clearInterval(updateInterval);
       clearInterval(spawnInterval);
     };
   }, [baseSpeed, spawnRate]);
@@ -138,18 +151,40 @@ const WorldSimulation: React.FC = () => {
     setBaseSpeed(parseFloat(event.target.value));
   };
 
-  const handleSpawnRateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSpawnRateChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setSpawnRate(parseInt(event.target.value));
   };
 
   return (
     <SimulationContainer>
       <Title>World Simulation</Title>
-      <Canvas 
-        ref={canvasRef} 
-        width={canvasWidth} 
-        height={canvasHeight} 
-      />
+      <SVGCanvas width={canvasWidth} height={canvasHeight}>
+        <rect
+          x={enX}
+          y={enY}
+          width={enWidth}
+          height={enHeight}
+          fill={entityColors.EN}
+          stroke="rgba(0, 255, 0, 0.8)"
+          strokeWidth={2}
+        />
+        {entityDetectors.map((detector) => (
+          <EntityDetector key={detector.id} {...detector} />
+        ))}
+        {particles.map((particle, index) => (
+          <circle
+            key={index}
+            cx={particle.x}
+            cy={particle.y}
+            r={4}
+            fill="yellow"
+            stroke="black"
+            strokeWidth={1}
+          />
+        ))}
+      </SVGCanvas>
       <ControlPanel>
         <SliderContainer>
           <SliderLabel>Particle Speed:</SliderLabel>
@@ -176,6 +211,22 @@ const WorldSimulation: React.FC = () => {
           <span>{spawnRate} per second</span>
         </SliderContainer>
       </ControlPanel>
+      <InfoPanel>
+        <h2>Entity Information</h2>
+        <h3>Color Mapping:</h3>
+        <ul>
+          {Object.entries(entityColors).map(([entity, color]) => (
+            <li key={entity}>
+              <span style={{ color }}>{entity}</span>: {color}
+            </li>
+          ))}
+        </ul>
+        <h3>Entity Detectors:</h3>
+        <p>
+          Blue circles that turn red and slightly enlarge when detecting
+          light particles.
+        </p>
+      </InfoPanel>
     </SimulationContainer>
   );
 };
