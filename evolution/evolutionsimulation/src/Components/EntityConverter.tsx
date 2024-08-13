@@ -1,11 +1,12 @@
 import React from 'react';
 
-export interface EntityConverterProps {
-  id: number;
-  x: number;
-  y: number;
-  size: number;
-}
+interface EntityConverterProps {
+    id: number;
+    x: number;
+    y: number;
+    size: number;
+    hasStoredEnergy: boolean;
+  }
 
 const EntityConverter: React.FC<EntityConverterProps> = ({ x, y, size }) => {
   return (
@@ -21,3 +22,4 @@ const EntityConverter: React.FC<EntityConverterProps> = ({ x, y, size }) => {
 };
 
 export default EntityConverter;
+export type {EntityConverterProps}

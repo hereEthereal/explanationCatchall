@@ -1,6 +1,7 @@
 import React from "react";
 
-export interface EntityDetectorProps {
+
+interface EntityDetectorProps {
   id: number;
   x: number;
   y: number;
@@ -27,3 +28,5 @@ const EntityDetector: React.FC<EntityDetectorProps> = ({
 };
 
 export default EntityDetector;
+
+export type {EntityDetectorProps}

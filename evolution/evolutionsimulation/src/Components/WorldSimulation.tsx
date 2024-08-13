@@ -17,7 +17,6 @@ interface UsableEnergy {
 }
 
 const ENERGY_SIZE = 8;
-const MAX_ENERGY_LAYERS = 3;
 
 const SimulationContainer = styled.div`
   display: flex;
@@ -71,30 +70,23 @@ const WorldSimulation: React.FC = () => {
   const [particles, setParticles] = useState<LightParticle[]>([]);
   const [usableEnergy, setUsableEnergy] = useState<UsableEnergy[]>([]);
   const [totalEnergyCreated, setTotalEnergyCreated] = useState(0);
-  const [totalEnergyRemoved, setTotalEnergyRemoved] = useState(0);
-  const [debugMode, setDebugMode] = useState(false);
-
   const [baseSpeed, setBaseSpeed] = useState<number>(1);
   const [spawnRate, setSpawnRate] = useState<number>(1);
+  
   const [entityDetectors, setEntityDetectors] = useState<EntityDetectorProps[]>([
     { id: 1, x: 100, y: 100, radius: 20, isDetecting: false },
     { id: 2, x: 300, y: 200, radius: 20, isDetecting: false },
     { id: 3, x: 500, y: 300, radius: 20, isDetecting: false },
   ]);
 
-    const [entityConverters, setEntityConverters] = useState<EntityConverterProps[]>([
-    { id: 1, x: 200, y: 150, size: 10 },
-    { id: 2, x: 400, y: 250, size: 10 },
-    { id: 3, x: 600, y: 350, size: 10 },
+  const [entityConverters, setEntityConverters] = useState<EntityConverterProps[]>([
+    { id: 1, x: 200, y: 150, size: 10, hasStoredEnergy: false },
+    { id: 2, x: 400, y: 250, size: 10, hasStoredEnergy: false },
+    { id: 3, x: 600, y: 350, size: 10, hasStoredEnergy: false },
   ]);
+
   const canvasWidth = 800;
   const canvasHeight = 600;
-
-  // Energy Nexus (EN) configuration
-  const enWidth = 100;
-  const enHeight = 80;
-  const enX = canvasWidth / 2 - enWidth / 2;
-  const enY = Math.floor((canvasHeight * 2) / 3);
 
   const entityColors = {
     EN: "rgba(0, 255, 0, 0.2)",
@@ -104,108 +96,71 @@ const WorldSimulation: React.FC = () => {
     ECv: "orange",
   };
 
-  // Modify the getNextEnergyPosition function:
-const getNextEnergyPosition = (
-  converter: EntityConverterProps,
-  existingEnergy: UsableEnergy[]
-): { x: number; y: number } | null => {
-  const positions = [];
-  for (let layer = 1; layer <= MAX_ENERGY_LAYERS; layer++) {
-    for (let i = 0; i < layer * 8; i++) {
-      const angle = (i * 2 * Math.PI) / (layer * 8);
-      const x = converter.x + Math.cos(angle) * (converter.size / 2 + ENERGY_SIZE * layer);
-      const y = converter.y + Math.sin(angle) * (converter.size / 2 + ENERGY_SIZE * layer);
-      positions.push({ x, y });
-    }
-  }
-
-  for (const pos of positions) {
-    const isOccupied = existingEnergy.some(
-      (energy) => Math.sqrt(Math.pow(energy.x - pos.x, 2) + Math.pow(energy.y - pos.y, 2)) < ENERGY_SIZE
-    );
-    if (!isOccupied) {
-      return pos;
-    }
-  }
-
-  return null; // All positions are occupied
-};
-
   useEffect(() => {
-    let particleId = 0;
     let usableEnergyId = 0;
 
     const updateInterval = setInterval(() => {
       setParticles((prevParticles) => {
         const updatedParticles = prevParticles
-          .map((particle) => ({
-            ...particle,
-            x: particle.x + Math.cos(particle.angle) * particle.speed,
-            y: particle.y + Math.sin(particle.angle) * particle.speed,
-          }))
-          .filter(
-            (particle) =>
-              particle.x >= 0 &&
-              particle.x <= canvasWidth &&
-              particle.y >= 0 &&
-              particle.y <= canvasHeight
-          );
+        .map((particle) => ({
+          ...particle,
+          x: particle.x + Math.cos(particle.angle) * particle.speed,
+          y: particle.y + Math.sin(particle.angle) * particle.speed,
+        }))
+        .filter(
+          (particle) =>
+            particle.x >= 0 &&
+            particle.x <= canvasWidth &&
+            particle.y >= 0 &&
+            particle.y <= canvasHeight
+        );
 
-        const updatedDetectors = entityDetectors.map((detector) => {
-          const isDetecting = updatedParticles.some(
+        // Update detectors
+        const updatedDetectors = entityDetectors.map((detector) => ({
+          ...detector,
+          isDetecting: updatedParticles.some(
             (particle) =>
               Math.sqrt(
                 Math.pow(detector.x - particle.x, 2) +
-                  Math.pow(detector.y - particle.y, 2)
+                Math.pow(detector.y - particle.y, 2)
               ) <= detector.radius
-          );
-
-          if (isDetecting !== detector.isDetecting) {
-            console.log(
-              `Detector ${detector.id} is ${
-                isDetecting ? "now detecting" : "no longer detecting"
-              } a particle`
-            );
-          }
-
-          return { ...detector, isDetecting };
-        });
-
+          ),
+        }));
         setEntityDetectors(updatedDetectors);
 
-
-
-        // Handle conversion process
-        const newUsableEnergy: UsableEnergy[] = [];
-        const remainingParticles = updatedParticles.filter((particle) => {
-          for (const converter of entityConverters) {
-            const distance = Math.sqrt(
-              Math.pow(converter.x - particle.x, 2) +
-                Math.pow(converter.y - particle.y, 2)
-            );
-            // todo, consider this if, we may need to make it more accomdating
-            if (distance <= converter.size / 2) {
-              const nextPosition = getNextEnergyPosition(converter, usableEnergy);
-              if (nextPosition) {
-                newUsableEnergy.push({
-                  id: usableEnergyId++,
-                  x: nextPosition.x,
-                  y: nextPosition.y,
-                });
-                console.log(`Energy created at (${nextPosition.x}, ${nextPosition.y})`);
-
-                setTotalEnergyCreated(prev => prev + 1);
-
-                return false; // Remove this particle
+           // Handle conversion process
+           setEntityConverters((prevConverters) => {
+            let newUsableEnergy: UsableEnergy[] = [];
+            const updatedConverters = prevConverters.map((converter) => {
+              if (!converter.hasStoredEnergy) {
+                const particleIndex = updatedParticles.findIndex(
+                  (particle) =>
+                    Math.sqrt(
+                      Math.pow(converter.x - particle.x, 2) +
+                      Math.pow(converter.y - particle.y, 2)
+                    ) <= converter.size / 2
+                );
+  
+                if (particleIndex !== -1) {
+                  newUsableEnergy.push({
+                    id: usableEnergyId++,
+                    x: converter.x + converter.size + ENERGY_SIZE / 2,
+                    y: converter.y,
+                  });
+                  updatedParticles.splice(particleIndex, 1);
+                  setTotalEnergyCreated((prev) => prev + 1);
+                  return { ...converter, hasStoredEnergy: true };
+                }
               }
-            }
-          }
-          return true; // Keep this particle
+              return converter;
+            });
+  
+            setUsableEnergy((prevEnergy) => [...prevEnergy, ...newUsableEnergy]);
+            return updatedConverters;
+          });
+  
+          return updatedParticles;
         });
-
-        setUsableEnergy((prevUsableEnergy) => [...prevUsableEnergy, ...newUsableEnergy]);
-
-        return remainingParticles;      });
     }, 16); // 60 FPS
 
     const spawnInterval = setInterval(() => {
@@ -232,9 +187,7 @@ const getNextEnergyPosition = (
     setBaseSpeed(parseFloat(event.target.value));
   };
 
-  const handleSpawnRateChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleSpawnRateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSpawnRate(parseInt(event.target.value));
   };
 
@@ -242,20 +195,25 @@ const getNextEnergyPosition = (
     <SimulationContainer>
       <Title>World Simulation</Title>
       <SVGCanvas width={canvasWidth} height={canvasHeight}>
-        <rect
-          x={enX}
-          y={enY}
-          width={enWidth}
-          height={enHeight}
-          fill={entityColors.EN}
-          stroke="rgba(0, 255, 0, 0.8)"
-          strokeWidth={2}
-        />
         {entityDetectors.map((detector) => (
-          <EntityDetector key={detector.id} {...detector} />
+          <circle
+            key={detector.id}
+            cx={detector.x}
+            cy={detector.y}
+            r={detector.radius}
+            fill={detector.isDetecting ? "red" : "blue"}
+            opacity={0.5}
+          />
         ))}
         {entityConverters.map((converter) => (
-          <EntityConverter key={converter.id} {...converter} />
+          <rect
+            key={converter.id}
+            x={converter.x - converter.size / 2}
+            y={converter.y - converter.size / 2}
+            width={converter.size}
+            height={converter.size}
+            fill={entityColors.ECv}
+          />
         ))}
         {particles.map((particle, index) => (
           <circle
@@ -268,8 +226,8 @@ const getNextEnergyPosition = (
             strokeWidth={1}
           />
         ))}
-         {usableEnergy.map((energy) => (
-            <rect
+        {usableEnergy.map((energy) => (
+          <rect
             key={energy.id}
             x={energy.x - ENERGY_SIZE / 2}
             y={energy.y - ENERGY_SIZE / 2}
@@ -317,11 +275,9 @@ const getNextEnergyPosition = (
         </ul>
         <h3>Entity Detectors:</h3>
         <p>
-          Blue circles that turn red and slightly enlarge when detecting
-          light particles.
+          Blue circles that turn red when detecting light particles.
         </p>
         <div>Total Energy Created: {totalEnergyCreated}</div>
-
       </InfoPanel>
     </SimulationContainer>
   );
