@@ -1,25 +1,59 @@
-import React from 'react';
+import React from "react";
 
-interface EntityConverterProps {
-    id: number;
-    x: number;
-    y: number;
-    size: number;
-    hasStoredEnergy: boolean;
-  }
+export interface EntityConverterProps {
+  id: number;
+  x: number;
+  y: number;
+  size: number;
+  hasStoredEnergy: boolean;
+}
 
-const EntityConverter: React.FC<EntityConverterProps> = ({ x, y, size }) => {
+const EntityConverter: React.FC<EntityConverterProps> = ({
+  x,
+  y,
+  size,
+  hasStoredEnergy
+}) => {
   return (
     <circle
       cx={x}
       cy={y}
       r={size / 2}
-      fill="orange"
+      fill={hasStoredEnergy ? "orange" : "purple"}
       stroke="black"
       strokeWidth={1}
     />
   );
 };
 
+export const initializeConverters = (
+  canvasWidth: number,
+  canvasHeight: number,
+  nexusX: number,
+  nexusY: number,
+  nexusWidth: number,
+  nexusHeight: number
+): EntityConverterProps[] => {
+  const converters: EntityConverterProps[] = [];
+  // Add 28 random converters
+  for (let i = 0; i < 28; i++) {
+    converters.push({
+      id: i,
+      x: Math.random() * canvasWidth,
+      y: Math.random() * canvasHeight,
+      size: 10,
+      hasStoredEnergy: false,
+    });
+  }
+  // Add one converter guaranteed to be in the Nexus area
+  converters.push({
+    id: 28,
+    x: nexusX + Math.random() * nexusWidth,
+    y: nexusY + Math.random() * nexusHeight,
+    size: 10,
+    hasStoredEnergy: false,
+  });
+  return converters;
+};
+
 export default EntityConverter;
-export type {EntityConverterProps}
