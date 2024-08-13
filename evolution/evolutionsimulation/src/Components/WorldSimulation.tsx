@@ -16,6 +16,9 @@ interface UsableEnergy {
   y: number;
 }
 
+const ENERGY_SIZE = 8;
+const MAX_ENERGY_LAYERS = 3;
+
 const SimulationContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -67,6 +70,10 @@ const InfoPanel = styled.div`
 const WorldSimulation: React.FC = () => {
   const [particles, setParticles] = useState<LightParticle[]>([]);
   const [usableEnergy, setUsableEnergy] = useState<UsableEnergy[]>([]);
+  const [totalEnergyCreated, setTotalEnergyCreated] = useState(0);
+  const [totalEnergyRemoved, setTotalEnergyRemoved] = useState(0);
+  const [debugMode, setDebugMode] = useState(false);
+
   const [baseSpeed, setBaseSpeed] = useState<number>(1);
   const [spawnRate, setSpawnRate] = useState<number>(1);
   const [entityDetectors, setEntityDetectors] = useState<EntityDetectorProps[]>([
@@ -96,6 +103,33 @@ const WorldSimulation: React.FC = () => {
     EC: "purple",
     ECv: "orange",
   };
+
+  // Modify the getNextEnergyPosition function:
+const getNextEnergyPosition = (
+  converter: EntityConverterProps,
+  existingEnergy: UsableEnergy[]
+): { x: number; y: number } | null => {
+  const positions = [];
+  for (let layer = 1; layer <= MAX_ENERGY_LAYERS; layer++) {
+    for (let i = 0; i < layer * 8; i++) {
+      const angle = (i * 2 * Math.PI) / (layer * 8);
+      const x = converter.x + Math.cos(angle) * (converter.size / 2 + ENERGY_SIZE * layer);
+      const y = converter.y + Math.sin(angle) * (converter.size / 2 + ENERGY_SIZE * layer);
+      positions.push({ x, y });
+    }
+  }
+
+  for (const pos of positions) {
+    const isOccupied = existingEnergy.some(
+      (energy) => Math.sqrt(Math.pow(energy.x - pos.x, 2) + Math.pow(energy.y - pos.y, 2)) < ENERGY_SIZE
+    );
+    if (!isOccupied) {
+      return pos;
+    }
+  }
+
+  return null; // All positions are occupied
+};
 
   useEffect(() => {
     let particleId = 0;
@@ -140,6 +174,7 @@ const WorldSimulation: React.FC = () => {
         setEntityDetectors(updatedDetectors);
 
 
+
         // Handle conversion process
         const newUsableEnergy: UsableEnergy[] = [];
         const remainingParticles = updatedParticles.filter((particle) => {
@@ -148,13 +183,21 @@ const WorldSimulation: React.FC = () => {
               Math.pow(converter.x - particle.x, 2) +
                 Math.pow(converter.y - particle.y, 2)
             );
+            // todo, consider this if, we may need to make it more accomdating
             if (distance <= converter.size / 2) {
-              newUsableEnergy.push({
-                id: usableEnergyId++,
-                x: converter.x + converter.size,
-                y: converter.y,
-              });
-              return false; // Remove this particle
+              const nextPosition = getNextEnergyPosition(converter, usableEnergy);
+              if (nextPosition) {
+                newUsableEnergy.push({
+                  id: usableEnergyId++,
+                  x: nextPosition.x,
+                  y: nextPosition.y,
+                });
+                console.log(`Energy created at (${nextPosition.x}, ${nextPosition.y})`);
+
+                setTotalEnergyCreated(prev => prev + 1);
+
+                return false; // Remove this particle
+              }
             }
           }
           return true; // Keep this particle
@@ -226,12 +269,12 @@ const WorldSimulation: React.FC = () => {
           />
         ))}
          {usableEnergy.map((energy) => (
-          <rect
+            <rect
             key={energy.id}
-            x={energy.x}
-            y={energy.y}
-            width={8}
-            height={8}
+            x={energy.x - ENERGY_SIZE / 2}
+            y={energy.y - ENERGY_SIZE / 2}
+            width={ENERGY_SIZE}
+            height={ENERGY_SIZE}
             fill="purple"
           />
         ))}
@@ -277,6 +320,8 @@ const WorldSimulation: React.FC = () => {
           Blue circles that turn red and slightly enlarge when detecting
           light particles.
         </p>
+        <div>Total Energy Created: {totalEnergyCreated}</div>
+
       </InfoPanel>
     </SimulationContainer>
   );
