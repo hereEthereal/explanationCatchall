@@ -35,8 +35,8 @@ export const initializeConverters = (
   nexusHeight: number
 ): EntityConverterProps[] => {
   const converters: EntityConverterProps[] = [];
-  // Add 28 random converters
-  for (let i = 0; i < 28; i++) {
+  // Add 100 random converters
+  for (let i = 0; i < 100; i++) {
     converters.push({
       id: i,
       x: Math.random() * canvasWidth,

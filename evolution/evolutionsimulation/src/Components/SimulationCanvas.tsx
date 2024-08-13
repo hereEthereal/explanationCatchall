@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import EntityConverter, { EntityConverterProps } from "./EntityConverter";
+import EntityMover, { EntityMoverProps } from "./EntityMover";
 import { LightParticle, UsableEnergy, ExecutiveCoordinator } from "./simulationUtils";
 
 const SVGCanvas = styled.svg`
@@ -8,33 +9,35 @@ const SVGCanvas = styled.svg`
 `;
 
 interface SimulationCanvasProps {
-  particles: LightParticle[];
-  usableEnergy: UsableEnergy[];
-  movingEnergy: UsableEnergy[];
-  entityConverters: EntityConverterProps[];
-  executiveCoordinator: ExecutiveCoordinator;
-  canvasWidth: number;
-  canvasHeight: number;
-  nexusX: number;
-  nexusY: number;
-  nexusWidth: number;
-  nexusHeight: number;
-}
+    particles: LightParticle[];
+    usableEnergy: UsableEnergy[];
+    movingEnergy: UsableEnergy[];
+    entityConverters: EntityConverterProps[];
+    entityMovers: EntityMoverProps[];
+    executiveCoordinator: ExecutiveCoordinator;
+    canvasWidth: number;
+    canvasHeight: number;
+    nexusX: number;
+    nexusY: number;
+    nexusWidth: number;
+    nexusHeight: number;
+  }
 
-const SimulationCanvas: React.FC<SimulationCanvasProps> = ({
-  particles,
-  usableEnergy,
-  movingEnergy,
-  entityConverters,
-  executiveCoordinator,
-  canvasWidth,
-  canvasHeight,
-  nexusX,
-  nexusY,
-  nexusWidth,
-  nexusHeight
-}) => {
-  const ENERGY_SIZE = 8;
+  const SimulationCanvas: React.FC<SimulationCanvasProps> = ({
+    particles,
+    usableEnergy,
+    movingEnergy,
+    entityConverters,
+    entityMovers,
+    executiveCoordinator,
+    canvasWidth,
+    canvasHeight,
+    nexusX,
+    nexusY,
+    nexusWidth,
+    nexusHeight
+  }) => {
+    const ENERGY_SIZE = 8;
 
   return (
     <SVGCanvas width={canvasWidth} height={canvasHeight}>
@@ -60,6 +63,9 @@ const SimulationCanvas: React.FC<SimulationCanvasProps> = ({
       {/* Render Entity Converters */}
       {entityConverters.map((converter) => (
         <EntityConverter key={converter.id} {...converter} />
+      ))}
+         {entityMovers.map((mover) => (
+        <EntityMover key={mover.id} {...mover} />
       ))}
       {/* Render Particles */}
       {particles.map((particle, index) => (

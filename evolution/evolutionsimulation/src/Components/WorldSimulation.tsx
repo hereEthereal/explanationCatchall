@@ -8,12 +8,15 @@ import {
   UsableEnergy, 
   ExecutiveCoordinator, 
   EntityConverterProps,
+  EntityMoverProps,
   updateParticles,
   handleConversion,
   updateMovingEnergy,
-  updateExecutiveCoordinator
+  updateExecutiveCoordinator,
+  updateEntityMovers
 } from "./simulationUtils";
 import { initializeConverters } from "./EntityConverter";
+import { initializeMovers } from "./EntityMover";
 
 const SimulationContainer = styled.div`
   display: flex;
@@ -54,6 +57,10 @@ const WorldSimulation: React.FC = () => {
     initializeConverters(canvasWidth, canvasHeight, nexusX, nexusY, NEXUS_WIDTH, NEXUS_HEIGHT)
   );
 
+  const [entityMovers, setEntityMovers] = useState<EntityMoverProps[]>(() => 
+    initializeMovers(20, canvasWidth, canvasHeight)
+  );
+
   const [executiveCoordinator, setExecutiveCoordinator] = useState<ExecutiveCoordinator>(() => ({
     x: nexusX + NEXUS_WIDTH / 2,
     y: nexusY + NEXUS_HEIGHT / 2,
@@ -83,10 +90,14 @@ const WorldSimulation: React.FC = () => {
       );
 
       setExecutiveCoordinator(prevEC => updateExecutiveCoordinator(prevEC, entityConverters));
+      const { updatedMovers, updatedConverters } = updateEntityMovers(entityMovers, entityConverters, canvasWidth, canvasHeight);
+      setEntityMovers(updatedMovers);
+      setEntityConverters(updatedConverters);
+
     }, 16);
 
     return () => clearInterval(updateInterval);
-  }, [baseSpeed, targetParticles, particles, entityConverters]);
+  }, [baseSpeed, targetParticles, particles, entityConverters, entityMovers]);
 
   const handleMoveStoredEnergy = () => {
     setEntityConverters(prevConverters => 
@@ -117,6 +128,7 @@ const WorldSimulation: React.FC = () => {
         usableEnergy={usableEnergy}
         movingEnergy={movingEnergy}
         entityConverters={entityConverters}
+        entityMovers={entityMovers}
         executiveCoordinator={executiveCoordinator}
         canvasWidth={canvasWidth}
         canvasHeight={canvasHeight}
