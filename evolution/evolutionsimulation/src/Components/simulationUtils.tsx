@@ -4,13 +4,11 @@ export interface LightParticle {
     speed: number;
     angle: number;
   }
-  
   export interface UsableEnergy {
-    id: number;
+    id: string;  // Changed from number to string
     x: number;
     y: number;
   }
-  
   export interface ExecutiveCoordinator {
     x: number;
     y: number;
@@ -76,11 +74,13 @@ export interface LightParticle {
     return [...updatedParticles, ...newParticles];
   };
   
+  let globalEnergyId = 0;
+
+
   export const handleConversion = (
     particles: LightParticle[],
     entityConverters: EntityConverterProps[],
-    usableEnergyId: number
-  ) => {
+  ): { updatedConverters: EntityConverterProps[], newUsableEnergy: UsableEnergy[], newEnergyInNexus: number } => {
     let newUsableEnergy: UsableEnergy[] = [];
     let newEnergyInNexus = 0;
     const updatedConverters = entityConverters.map((converter) => {
@@ -94,21 +94,21 @@ export interface LightParticle {
         );
   
         if (particleIndex !== -1) {
-          const newEnergy = {
-            id: usableEnergyId++,
-            x: converter.x + converter.size + ENERGY_SIZE / 2,
+          const newEnergy: UsableEnergy = {
+            id: `energy-${globalEnergyId++}`,
+            x: converter.x + converter.size + 8 / 2,
             y: converter.y,
           };
           newUsableEnergy.push(newEnergy);
   
           // Check if the new energy is in the Nexus area
-          const nexusX = canvasWidth / 2 - NEXUS_WIDTH / 2;
-          const nexusY = (canvasHeight * 2) / 3 - NEXUS_HEIGHT / 2;
+          const nexusX = 800 / 2 - 300 / 2;
+          const nexusY = (600 * 2) / 3 - 100 / 2;
           if (
             newEnergy.x >= nexusX &&
-            newEnergy.x <= nexusX + NEXUS_WIDTH &&
+            newEnergy.x <= nexusX + 300 &&
             newEnergy.y >= nexusY &&
-            newEnergy.y <= nexusY + NEXUS_HEIGHT
+            newEnergy.y <= nexusY + 100
           ) {
             newEnergyInNexus++;
           }
@@ -121,7 +121,6 @@ export interface LightParticle {
   
     return { updatedConverters, newUsableEnergy, newEnergyInNexus };
   };
-  
   export const updateMovingEnergy = (
     prevMovingEnergy: UsableEnergy[],
     executiveCoordinator: ExecutiveCoordinator | null,

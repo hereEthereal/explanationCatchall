@@ -38,49 +38,55 @@ interface SimulationCanvasProps {
     nexusHeight
   }) => {
     const ENERGY_SIZE = 8;
-
-  return (
-    <SVGCanvas width={canvasWidth} height={canvasHeight}>
-      {/* Render Nexus area */}
-      <rect
-        x={nexusX}
-        y={nexusY}
-        width={nexusWidth}
-        height={nexusHeight}
-        fill="rgba(0, 255, 0, 0.2)"
-        stroke="black"
-        strokeWidth={1}
-      />
-      {/* Render Executive Coordinator */}
-      <circle
-        cx={executiveCoordinator.x}
-        cy={executiveCoordinator.y}
-        r={executiveCoordinator.size / 2}
-        fill="blue"
-        stroke="black"
-        strokeWidth={1}
-      />
-      {/* Render Entity Converters */}
-      {entityConverters.map((converter) => (
-        <EntityConverter key={converter.id} {...converter} />
-      ))}
-         {entityMovers.map((mover) => (
-        <EntityMover key={mover.id} {...mover} />
-      ))}
-      {/* Render Particles */}
-      {particles.map((particle, index) => (
-        <circle
-          key={index}
-          cx={particle.x}
-          cy={particle.y}
-          r={4}
-          fill="yellow"
+  
+    return (
+      <SVGCanvas width={canvasWidth} height={canvasHeight}>
+        {/* Render Nexus area */}
+        <rect
+          x={nexusX}
+          y={nexusY}
+          width={nexusWidth}
+          height={nexusHeight}
+          fill="rgba(0, 255, 0, 0.2)"
           stroke="black"
           strokeWidth={1}
         />
-      ))}
-      {/* Render Usable Energy */}
-      {usableEnergy.map((energy) => (
+        
+        {/* Render Executive Coordinator */}
+        <circle
+          cx={executiveCoordinator.x}
+          cy={executiveCoordinator.y}
+          r={executiveCoordinator.size / 2}
+          fill="blue"
+          stroke="black"
+          strokeWidth={1}
+        />
+        
+        {/* Render Entity Converters */}
+        {entityConverters.map((converter) => (
+          <EntityConverter key={`converter-${converter.id}`} {...converter} />
+        ))}
+        
+        {/* Render Entity Movers */}
+        {entityMovers.map((mover) => (
+          <EntityMover key={`mover-${mover.id}`} {...mover} />
+        ))}
+        
+        {/* Render Particles */}
+        {particles.map((particle, index) => (
+          <circle
+            key={`particle-${index}`}
+            cx={particle.x}
+            cy={particle.y}
+            r={4}
+            fill="yellow"
+            stroke="black"
+            strokeWidth={1}
+          />
+        ))}
+        
+        {/* Render Usable Energy */}
+        {usableEnergy.map((energy) => (
         <rect
           key={energy.id}
           x={energy.x - ENERGY_SIZE / 2}
@@ -90,8 +96,9 @@ interface SimulationCanvasProps {
           fill="purple"
         />
       ))}
-      {/* Render Moving Energy */}
-      {movingEnergy.map((energy) => (
+        
+        {/* Render Moving Energy */}
+        {movingEnergy.map((energy) => (
         <rect
           key={energy.id}
           x={energy.x - ENERGY_SIZE / 2}
@@ -101,8 +108,8 @@ interface SimulationCanvasProps {
           fill="green"
         />
       ))}
-    </SVGCanvas>
-  );
-};
-
-export default SimulationCanvas;
+      </SVGCanvas>
+    );
+  };
+  
+  export default SimulationCanvas;

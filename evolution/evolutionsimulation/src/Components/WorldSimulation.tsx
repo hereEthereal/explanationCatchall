@@ -18,6 +18,7 @@ import {
 import { initializeConverters } from "./EntityConverter";
 import { initializeMovers } from "./EntityMover";
 
+
 const SimulationContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -58,7 +59,7 @@ const WorldSimulation: React.FC = () => {
   );
 
   const [entityMovers, setEntityMovers] = useState<EntityMoverProps[]>(() => 
-    initializeMovers(20, canvasWidth, canvasHeight)
+    initializeMovers(30, canvasWidth, canvasHeight)
   );
 
   const [executiveCoordinator, setExecutiveCoordinator] = useState<ExecutiveCoordinator>(() => ({
@@ -73,27 +74,30 @@ const WorldSimulation: React.FC = () => {
   }));
 
   useEffect(() => {
-    let usableEnergyId = 0;
-
     const updateInterval = setInterval(() => {
       setParticles(prevParticles => updateParticles(prevParticles, targetParticles, baseSpeed));
       
-      const conversionResult = handleConversion(particles, entityConverters, usableEnergyId);
+      const conversionResult = handleConversion(particles, entityConverters);
       setEntityConverters(conversionResult.updatedConverters);
-      setUsableEnergy(prevEnergy => [...prevEnergy, ...conversionResult.newUsableEnergy]);
+      setUsableEnergy(prevEnergy => {
+        const newEnergy = [...prevEnergy, ...conversionResult.newUsableEnergy];
+        // Remove any duplicate energies based on their ID
+        return newEnergy.filter((energy, index, self) =>
+          index === self.findIndex((e) => e.id === energy.id)
+        );
+      });
       setTotalEnergyCreated(prev => prev + conversionResult.newUsableEnergy.length);
       setAmountOfStoredEnergyInNexus(prev => prev + conversionResult.newEnergyInNexus);
-      usableEnergyId += conversionResult.newUsableEnergy.length;
 
       setMovingEnergy(prevMovingEnergy => 
         updateMovingEnergy(prevMovingEnergy, executiveCoordinator, setLargestRewardCount)
       );
 
       setExecutiveCoordinator(prevEC => updateExecutiveCoordinator(prevEC, entityConverters));
+
       const { updatedMovers, updatedConverters } = updateEntityMovers(entityMovers, entityConverters, canvasWidth, canvasHeight);
       setEntityMovers(updatedMovers);
       setEntityConverters(updatedConverters);
-
     }, 16);
 
     return () => clearInterval(updateInterval);
