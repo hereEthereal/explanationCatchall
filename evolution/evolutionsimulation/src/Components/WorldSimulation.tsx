@@ -1,6 +1,5 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import EntityDetector, { EntityDetectorProps } from "./EntityDetector";
 import EntityConverter, { EntityConverterProps } from "./EntityConverter";
 
 interface LightParticle {
@@ -16,9 +15,21 @@ interface UsableEnergy {
   y: number;
 }
 
+interface ExecutiveCoordinator {
+  x: number;
+  y: number;
+  size: number;
+  knownLocations: {
+    converters: { id: number; x: number; y: number }[];
+    nexus: { x: number; y: number; width: number; height: number };
+    self: { x: number; y: number };
+  };
+}
+
 const ENERGY_SIZE = 8;
 const NEXUS_WIDTH = 300;
 const NEXUS_HEIGHT = 100;
+const EC_SIZE = 20;
 
 const SimulationContainer = styled.div`
   display: flex;
@@ -83,15 +94,14 @@ const Button = styled.button`
   }
 `;
 
-
-
 const WorldSimulation: React.FC = () => {
   const [particles, setParticles] = useState<LightParticle[]>([]);
   const [usableEnergy, setUsableEnergy] = useState<UsableEnergy[]>([]);
   const [totalEnergyCreated, setTotalEnergyCreated] = useState(0);
   const [amountOfStoredEnergyInNexus, setAmountOfStoredEnergyInNexus] = useState(0);
+  const [largestRewardCount, setLargestRewardCount] = useState(0);
   const [baseSpeed, setBaseSpeed] = useState<number>(1);
-  const [spawnRate, setSpawnRate] = useState<number>(1);
+  const [targetParticles, setTargetParticles] = useState<number>(10);
   const [movingEnergy, setMovingEnergy] = useState<UsableEnergy[]>([]);
 
   const canvasWidth = 800;
@@ -99,12 +109,6 @@ const WorldSimulation: React.FC = () => {
 
   const nexusX = canvasWidth / 2 - NEXUS_WIDTH / 2;
   const nexusY = (canvasHeight * 2) / 3 - NEXUS_HEIGHT / 2;
-
-  const [entityDetectors, setEntityDetectors] = useState<EntityDetectorProps[]>([
-    { id: 1, x: 100, y: 100, radius: 20, isDetecting: false },
-    { id: 2, x: 300, y: 200, radius: 20, isDetecting: false },
-    { id: 3, x: 500, y: 300, radius: 20, isDetecting: false },
-  ]);
 
   const [entityConverters, setEntityConverters] = useState<EntityConverterProps[]>(() => {
     const converters: EntityConverterProps[] = [];
@@ -129,11 +133,21 @@ const WorldSimulation: React.FC = () => {
     return converters;
   });
 
+  const [executiveCoordinator, setExecutiveCoordinator] = useState<ExecutiveCoordinator>({
+    x: nexusX + NEXUS_WIDTH / 2,
+    y: nexusY + NEXUS_HEIGHT / 2,
+    size: EC_SIZE,
+    knownLocations: {
+      converters: entityConverters.map(({ id, x, y }) => ({ id, x, y })),
+      nexus: { x: nexusX, y: nexusY, width: NEXUS_WIDTH, height: NEXUS_HEIGHT },
+      self: { x: nexusX + NEXUS_WIDTH / 2, y: nexusY + NEXUS_HEIGHT / 2 },
+    },
+  });
+
   const entityColors = {
     EN: "rgba(0, 255, 0, 0.2)",
-    ED: "blue",
     EM: "red",
-    EC: "purple",
+    EC: "blue",
     ECv: "orange",
   };
 
@@ -156,100 +170,105 @@ const WorldSimulation: React.FC = () => {
               particle.y <= canvasHeight
           );
 
-        // Update detectors
-        const updatedDetectors = entityDetectors.map((detector) => ({
-          ...detector,
-          isDetecting: updatedParticles.some(
-            (particle) =>
-              Math.sqrt(
-                Math.pow(detector.x - particle.x, 2) +
-                Math.pow(detector.y - particle.y, 2)
-              ) <= detector.radius
-          ),
+        // Spawn new particles
+        const particlesToSpawn = Math.max(0, targetParticles - updatedParticles.length);
+        const newParticles = Array(particlesToSpawn).fill(null).map(() => ({
+          x: Math.random() * canvasWidth,
+          y: 0,
+          speed: baseSpeed + Math.random() * baseSpeed,
+          angle: Math.PI / 2 + (Math.random() - 0.5) * (Math.PI / 4),
         }));
-        setEntityDetectors(updatedDetectors);
 
-        // Handle conversion process
-        setEntityConverters((prevConverters) => {
-          let newUsableEnergy: UsableEnergy[] = [];
-          const updatedConverters = prevConverters.map((converter) => {
-            if (!converter.hasStoredEnergy) {
-              const particleIndex = updatedParticles.findIndex(
-                (particle) =>
-                  Math.sqrt(
-                    Math.pow(converter.x - particle.x, 2) +
-                    Math.pow(converter.y - particle.y, 2)
-                  ) <= converter.size / 2
-              );
-
-              if (particleIndex !== -1) {
-                const newEnergy = {
-                  id: usableEnergyId++,
-                  x: converter.x + converter.size + ENERGY_SIZE / 2,
-                  y: converter.y,
-                };
-                newUsableEnergy.push(newEnergy);
-                updatedParticles.splice(particleIndex, 1);
-                setTotalEnergyCreated((prev) => prev + 1);
-
-                // Check if the new energy is in the Nexus area
-                if (
-                  newEnergy.x >= nexusX &&
-                  newEnergy.x <= nexusX + NEXUS_WIDTH &&
-                  newEnergy.y >= nexusY &&
-                  newEnergy.y <= nexusY + NEXUS_HEIGHT
-                ) {
-                  setAmountOfStoredEnergyInNexus((prev) => prev + 1);
-                }
-
-                return { ...converter, hasStoredEnergy: true };
-              }
-            }
-            return converter;
-          });
-
-          setUsableEnergy((prevEnergy) => [...prevEnergy, ...newUsableEnergy]);
-          return updatedConverters;
-        });
-
-        return updatedParticles;
+        return [...updatedParticles, ...newParticles];
       });
 
-      // Move the falling energy
-      setMovingEnergy((prevMovingEnergy) =>
-        prevMovingEnergy.map((energy) => ({
-          ...energy,
-          y: energy.y + 1, // Adjust this value to change falling speed
-        })).filter((energy) => energy.y < canvasHeight)
-      );
-    }, 16); // 60 FPS
+      // Handle conversion process
+      setEntityConverters((prevConverters) => {
+        let newUsableEnergy: UsableEnergy[] = [];
+        const updatedConverters = prevConverters.map((converter) => {
+          if (!converter.hasStoredEnergy) {
+            const particleIndex = particles.findIndex(
+              (particle) =>
+                Math.sqrt(
+                  Math.pow(converter.x - particle.x, 2) +
+                  Math.pow(converter.y - particle.y, 2)
+                ) <= converter.size / 2
+            );
 
-    const spawnInterval = setInterval(() => {
-      setParticles((prevParticles) => [
-        ...prevParticles,
-        ...Array(spawnRate)
-          .fill(null)
-          .map(() => ({
-            x: Math.random() * canvasWidth,
-            y: 0,
-            speed: baseSpeed + Math.random() * baseSpeed,
-            angle: Math.PI / 2 + (Math.random() - 0.5) * (Math.PI / 4),
-          })),
-      ]);
-    }, 1000);
+            if (particleIndex !== -1) {
+              const newEnergy = {
+                id: usableEnergyId++,
+                x: converter.x + converter.size + ENERGY_SIZE / 2,
+                y: converter.y,
+              };
+              newUsableEnergy.push(newEnergy);
+              setParticles((prevParticles) => {
+                const updatedParticles = [...prevParticles];
+                updatedParticles.splice(particleIndex, 1);
+                return updatedParticles;
+              });
+              setTotalEnergyCreated((prev) => prev + 1);
+
+              // Check if the new energy is in the Nexus area
+              if (
+                newEnergy.x >= nexusX &&
+                newEnergy.x <= nexusX + NEXUS_WIDTH &&
+                newEnergy.y >= nexusY &&
+                newEnergy.y <= nexusY + NEXUS_HEIGHT
+              ) {
+                setAmountOfStoredEnergyInNexus((prev) => prev + 1);
+              }
+
+              return { ...converter, hasStoredEnergy: true };
+            }
+          }
+          return converter;
+        });
+
+        setUsableEnergy((prevEnergy) => [...prevEnergy, ...newUsableEnergy]);
+        return updatedConverters;
+      });
+
+      // Move the falling energy and check for contact with Executive Coordinator
+      setMovingEnergy((prevMovingEnergy) =>
+        prevMovingEnergy.map((energy) => {
+          const newY = energy.y + 1; // Adjust this value to change falling speed
+          
+          // Check if energy is in contact with Executive Coordinator
+          if (
+            Math.abs(energy.x - executiveCoordinator.x) <= (ENERGY_SIZE + executiveCoordinator.size) / 2 &&
+            Math.abs(newY - executiveCoordinator.y) <= (ENERGY_SIZE + executiveCoordinator.size) / 2
+          ) {
+            setLargestRewardCount((prev) => prev + 1);
+            return null; // Remove this energy
+          }
+          
+          return { ...energy, y: newY };
+        }).filter((energy): energy is UsableEnergy => energy !== null && energy.y < canvasHeight)
+      );
+
+      // Update Executive Coordinator's knowledge of entity locations
+      setExecutiveCoordinator((prevEC) => ({
+        ...prevEC,
+        knownLocations: {
+          ...prevEC.knownLocations,
+          converters: entityConverters.map(({ id, x, y }) => ({ id, x, y })),
+          self: { x: prevEC.x, y: prevEC.y },
+        },
+      }));
+    }, 16); // 60 FPS
 
     return () => {
       clearInterval(updateInterval);
-      clearInterval(spawnInterval);
     };
-  }, [baseSpeed, spawnRate]);
+  }, [baseSpeed, targetParticles, executiveCoordinator]);
 
   const handleSpeedChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setBaseSpeed(parseFloat(event.target.value));
   };
 
-  const handleSpawnRateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSpawnRate(parseInt(event.target.value));
+  const handleTargetParticlesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setTargetParticles(parseInt(event.target.value));
   };
 
   const handleMoveStoredEnergy = () => {
@@ -287,9 +306,15 @@ const WorldSimulation: React.FC = () => {
           stroke="black"
           strokeWidth={1}
         />
-        {entityDetectors.map((detector) => (
-          <EntityDetector key={detector.id} {...detector} />
-        ))}
+        {/* Render Executive Coordinator */}
+        <circle
+          cx={executiveCoordinator.x}
+          cy={executiveCoordinator.y}
+          r={executiveCoordinator.size / 2}
+          fill={entityColors.EC}
+          stroke="black"
+          strokeWidth={1}
+        />
         {entityConverters.map((converter) => (
           <EntityConverter key={converter.id} {...converter} />
         ))}
@@ -314,6 +339,16 @@ const WorldSimulation: React.FC = () => {
             fill="purple"
           />
         ))}
+        {movingEnergy.map((energy) => (
+          <rect
+            key={energy.id}
+            x={energy.x - ENERGY_SIZE / 2}
+            y={energy.y - ENERGY_SIZE / 2}
+            width={ENERGY_SIZE}
+            height={ENERGY_SIZE}
+            fill="green"
+          />
+        ))}
       </SVGCanvas>
       <ControlPanel>
         <SliderContainer>
@@ -329,16 +364,16 @@ const WorldSimulation: React.FC = () => {
           <span>{baseSpeed.toFixed(1)}</span>
         </SliderContainer>
         <SliderContainer>
-          <SliderLabel>Spawn Rate:</SliderLabel>
+          <SliderLabel>Target Particles:</SliderLabel>
           <input
             type="range"
             min="1"
-            max="20"
+            max="100"
             step="1"
-            value={spawnRate}
-            onChange={handleSpawnRateChange}
+            value={targetParticles}
+            onChange={handleTargetParticlesChange}
           />
-          <span>{spawnRate} per second</span>
+          <span>{targetParticles}</span>
         </SliderContainer>
         <Button onClick={handleMoveStoredEnergy}>Move Stored Energy</Button>
       </ControlPanel>
@@ -352,12 +387,13 @@ const WorldSimulation: React.FC = () => {
             </li>
           ))}
         </ul>
-        <h3>Entity Detectors:</h3>
-        <p>
-          Blue circles that turn red when detecting light particles.
-        </p>
         <div>Total Energy Created: {totalEnergyCreated}</div>
         <div>Stored Energy in Nexus: {amountOfStoredEnergyInNexus}</div>
+        <div>Largest Reward Count: {largestRewardCount}</div>
+        <h3>Executive Coordinator Knowledge:</h3>
+        <div>Number of Converters: {executiveCoordinator.knownLocations.converters.length}</div>
+        <div>Nexus Location: ({executiveCoordinator.knownLocations.nexus.x}, {executiveCoordinator.knownLocations.nexus.y})</div>
+        <div>Self Location: ({executiveCoordinator.knownLocations.self.x}, {executiveCoordinator.knownLocations.self.y})</div>
       </InfoPanel>
     </SimulationContainer>
   );
