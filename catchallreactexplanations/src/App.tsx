@@ -21,17 +21,11 @@ import TrigVisualizer from "./projects/TrigVisualizer/TrigVisualizer";
 import SetOperationsVisualizer from "./projects/SetOperationsVisualizer/SetOperationsVisualizer";
 import QuadraticSolver from "./projects/QuadraticSolver/QuadraticSolver";
 import { LinearRegressionVisualizer } from "./projects/LinearRegressionVisualizer/LinearRegressionVisualizer";
-import { HarmonicVisualizer } from "./projects/HarmonicVisualizer/HarmonicVisualizer";
-import ArraysHashingFlow from "./projects/ArraysHashingFlow";
 import EuclideanGCD from "./projects/EuclideanGCD/EuclideanGCD";
-import BasicMatrixOperations from "./projects/BasicMatrixOperations/BasicMatrixOperations";
-import SimpleHarmonicMotion from "./projects/SimpleHarmonicMotion/SimpleHarmonicMotion";
-import LogicGatesSimulator from "./projects/LogicGatesSimulator/LogicGatesSimulator";
 import LinkedListVisualizer from "./projects/LinkedListVisualizer/LinkedListVisualizer";
 import RhythmTypingTrainer from "./projects/typing/RhythmTypingTrainer";
 import QuickSort from "./projects/QuicksortComponent";
 import QuicksortVisualizer from "./projects/QuicksortComponent";
-import OrgChartTree from "./projects/OrgTree";
 import QSTree from "./projects/QSTree";
 import QSTreeA from "./projects/QSTreeA";
 // import BinaryTreeCyto from "./projects/BinaryTreeCyto";
@@ -41,7 +35,6 @@ import BinaryTreeSortedSVG from "./projects/BinaryTreeSortedSVG";
 import BinaryTreeReact from "./projects/BinaryTreeKonva";
 import BinaryTreeKonva from "./projects/BinaryTreeKonva";
 import BinarySearchTreeKonvaSearch from "./projects/BinaryTreeKonvaSearch";
-import AVLTreeKonva from "./projects/AVLTreeKonva";
 import BabylonianMethodSquareVisualizer from "./projects/BabylonianMethodSquareVisualizer";
 import BinarySearchTreeKonva from "./projects/BinaryTreeKonva";
 import TwoSumNestedLoop from './projects/2SumNestedLoop';
@@ -51,8 +44,6 @@ import MyTwoSum from './projects/MyTwoSum';
 import TwoSumWrapper from './projects/TwoSumWrapper';
 
 const projectList = [
-  { name: "App A", path: "/app-a", element: <AppA /> },
-  { name: "App B", path: "/app-b", element: <AppB /> },
   {
     name: "Babylonian Method Square Visualizer",
     path: "/square-root",
@@ -73,11 +64,6 @@ const projectList = [
     name: "Draggable Quadrilateral",
     path: "/draggable-quadrilateral",
     element: <DraggableQuadrilateral />,
-  },
-  {
-    name: "Trig Visualization",
-    path: "/trig-visualization",
-    element: <TrigCircleVisualization />,
   },
   {
     name: "Volume Approximation",
@@ -135,34 +121,9 @@ const projectList = [
     element: <LinearRegressionVisualizer />,
   },
   {
-    name: "HarmonicVisualizer",
-    path: "HarmonicVisualizer",
-    element: <HarmonicVisualizer />,
-  },
-  {
-    name: "ArraysHashingFlow",
-    path: "ArraysHashingFlow",
-    element: <ArraysHashingFlow />,
-  },
-  {
     name: "EuclideanGCD",
     path: "EuclideanGCD",
     element: <EuclideanGCD />,
-  },
-  {
-    name: "SimpleHarmonicMotion",
-    path: "SimpleHarmonicMotion",
-    element: <SimpleHarmonicMotion />,
-  },
-  {
-    name: "LogicGatesSimulator",
-    path: "LogicGatesSimulator",
-    element: <LogicGatesSimulator />,
-  },
-  {
-    name: "BasicMatrixOperations",
-    path: "BasicMatrixOperations",
-    element: <BasicMatrixOperations />,
   },
   {
     name: "LinkedListVisualizer",
@@ -180,11 +141,6 @@ const projectList = [
     element: <QuicksortVisualizer />,
   },
   {
-    name: "OrgChartTree",
-    path: "OrgChartTree",
-    element: <OrgChartTree />,
-  },
-  {
     name: "QSTree",
     path: "QSTree",
     element: <QSTree />,
@@ -200,11 +156,6 @@ const projectList = [
   //   element: <QuickSortB initialArray={[3,6,2,7,1,8]} />,
   // }, 
   {
-    name: "BinaryTreeSortedSVG",
-    path: "BinaryTreeSortedSVG",
-    element: <BinaryTreeSortedSVG />,
-  },  
-  {
     name: "BinaryTreeKonva",
     path: "BinaryTreeKonva",
     element: <BinaryTreeKonva />,
@@ -213,17 +164,7 @@ const projectList = [
     name: "BinarySearchTreeKonvaSearch",
     path: "BinarySearchTreeKonvaSearch",
     element: <BinarySearchTreeKonvaSearch />,
-  },  
-  {
-    name: "AVLTreeKonva BROKEN",
-    path: "AVLTreeKonva",
-    element: <AVLTreeKonva />,
-  },  
-  {
-    name: "TwoSumNestedLoop",
-    path: "TwoSumNestedLoop",
-    element: <TwoSumNestedLoop numbers={[1,2,3,4,100,5,6,50,7,8,9]} target={150} isStartButtonPressed={false} speed={1} />,
-  },  
+  },   
   {
     name: "TwoSumWrapper",
     path: "TwoSumWrapper",
@@ -274,14 +215,6 @@ const Home: React.FC = () => (
     <h1>Catchall - My React Projects</h1>
     <ul>
       {projectList.map((project, index) => (
-        <li key={index}>
-          <Link to={project.path}>{project.name}</Link>
-        </li>
-      ))}
-    </ul>
-    <h2>Presentations</h2>
-    <ul>
-      {presentationList.map((project, index) => (
         <li key={index}>
           <Link to={project.path}>{project.name}</Link>
         </li>

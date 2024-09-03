@@ -64,9 +64,9 @@ const TwoSumWrapper: React.FC = () => {
   const [numbers, setNumbers] = useState<number[]>([]);
   const [target, setTarget] = useState<number>(0);
   const [inputNumbers, setInputNumbers] = useState('23, 7, 42, 15, 31, 9, 48, 3, 36, 19, 11, 27, 4, 39, 16, 45, 50, 8, 33, 21, 47, 13, 29, 6,60, 41, 18, 2, 37, 25, 10');
-  const [inputTarget, setInputTarget] = useState('110')
+  const [inputTarget, setInputTarget] = useState('80')
   const [isStartButtonPressed, setIsStartButtonPressed] = useState(false);
-  const [speed, setSpeed] = useState(1000);
+  const [speed, setSpeed] = useState(100);
 
   const handleSubmit = () => {
     const newNumbers = inputNumbers.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));

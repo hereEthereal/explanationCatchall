@@ -9,13 +9,18 @@ const SetOperationsVisualizer: React.FC<SetOperationsVisualizerProps> = () => {
   const [setB, setSetB] = useState<string[]>([]);
   const [result, setResult] = useState<string[]>([]);
   const [operation, setOperation] = useState<'union' | 'intersection' | 'difference'>('union');
+  const [inputA, setInputA] = useState<string>('');
+  const [inputB, setInputB] = useState<string>('');
 
-  const updateSet = (set: 'A' | 'B', value: string) => {
-    const elements = value.split(',').map(item => item.trim()).filter(item => item !== '');
+  const addToSet = (set: 'A' | 'B') => {
+    const input = set === 'A' ? inputA : inputB;
+    const elements = input.split(' ').map(item => item.trim()).filter(item => item !== '');
     if (set === 'A') {
-      setSetA(elements);
+      setSetA([...setA, ...elements]);
+      setInputA('');
     } else {
-      setSetB(elements);
+      setSetB([...setB, ...elements]);
+      setInputB('');
     }
   };
 
@@ -47,20 +52,22 @@ const SetOperationsVisualizer: React.FC<SetOperationsVisualizerProps> = () => {
           <input
             id="setA"
             type="text"
-            value={setA.join(', ')}
-            onChange={(e) => updateSet('A', e.target.value)}
-            placeholder="Enter elements separated by commas"
+            value={inputA}
+            onChange={(e) => setInputA(e.target.value)}
+            placeholder="Space-separated items"
           />
+          <button onClick={() => addToSet('A')}>Add to Set A</button>
         </div>
         <div>
           <label htmlFor="setB">Set B:</label>
           <input
             id="setB"
             type="text"
-            value={setB.join(', ')}
-            onChange={(e) => updateSet('B', e.target.value)}
-            placeholder="Enter elements separated by commas"
+            value={inputB}
+            onChange={(e) => setInputB(e.target.value)}
+            placeholder="Space-separated items"
           />
+          <button onClick={() => addToSet('B')}>Add to Set B</button>
         </div>
       </div>
 
@@ -78,17 +85,17 @@ const SetOperationsVisualizer: React.FC<SetOperationsVisualizerProps> = () => {
 
       <div className="result-display">
         <h3>Result:</h3>
-        <p>{result.join(', ')}</p>
+        <p>{result.join(' ')}</p>
       </div>
 
       <div className="set-display">
         <div>
           <h3>Set A:</h3>
-          <p>{setA.join(', ')}</p>
+          <p>{setA.join(' ')}</p>
         </div>
         <div>
           <h3>Set B:</h3>
-          <p>{setB.join(', ')}</p>
+          <p>{setB.join(' ')}</p>
         </div>
       </div>
     </div>
