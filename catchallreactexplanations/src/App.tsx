@@ -27,7 +27,6 @@ import RhythmTypingTrainer from "./projects/typing/RhythmTypingTrainer";
 import QuickSort from "./projects/QuicksortComponent";
 import QuicksortVisualizer from "./projects/QuicksortComponent";
 import QSTree from "./projects/QSTree";
-import QSTreeA from "./projects/QSTreeA";
 // import BinaryTreeCyto from "./projects/BinaryTreeCyto";
 import QuickSortVisualizerTree from "./projects/BinaryTreeSortedSVG";
 import ExampleA from "./projects/BinaryTreeSortedSVG";
@@ -144,11 +143,6 @@ const projectList = [
     name: "QSTree",
     path: "QSTree",
     element: <QSTree />,
-  },
-  {
-    name: "QSTreeA",
-    path: "QSTreeA",
-    element: <QSTreeA />,
   },
   // {
   //   name: "QuickSortB",
