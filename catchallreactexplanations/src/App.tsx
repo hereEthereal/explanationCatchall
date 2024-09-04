@@ -41,6 +41,8 @@ import TwoSumEfficientVisualizer from './projects/TwoSumEfficientVisualizer';
 import TwoSumSortedPointerVisualizer from './projects/TwoSumSortedPointerVisualizer';
 import MyTwoSum from './projects/MyTwoSum';
 import TwoSumWrapper from './projects/TwoSumWrapper';
+import QSTreeA from './projects/QSTreeA';
+import QSTreeB from './projects/QSTreeB';
 
 const projectList = [
   {
@@ -143,6 +145,11 @@ const projectList = [
     name: "QSTree",
     path: "QSTree",
     element: <QSTree />,
+  },
+  {
+    name: "QSTree Dynamic With correct spacing",
+    path: "QSTree Dynamic With correct spacing",
+    element: <QSTreeB />,
   },
   // {
   //   name: "QuickSortB",
