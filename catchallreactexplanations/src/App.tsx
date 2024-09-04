@@ -22,7 +22,7 @@ import SetOperationsVisualizer from "./projects/SetOperationsVisualizer/SetOpera
 import QuadraticSolver from "./projects/QuadraticSolver/QuadraticSolver";
 import { LinearRegressionVisualizer } from "./projects/LinearRegressionVisualizer/LinearRegressionVisualizer";
 import EuclideanGCD from "./projects/EuclideanGCD/EuclideanGCD";
-import LinkedListVisualizer from "./projects/LinkedListVisualizer/LinkedListVisualizer";
+// import LinkedListVisualizer from "./projects/LinkedListVisualizer/LinkedListVisualizer";
 import RhythmTypingTrainer from "./projects/typing/RhythmTypingTrainer";
 import QuickSort from "./projects/QuicksortComponent";
 import QuicksortVisualizer from "./projects/QuicksortComponent";
@@ -45,6 +45,7 @@ import QSTreeA from './projects/QSTreeA';
 // import QSTreeB from './projects/QSTreeB';
 import PathfindingVisualization from './projects/PathfindingVisualization';
 import QSTreeB from './projects/QSTreeB';
+// import ForceGraphPathfinding from './projects/ForceGraphPathfinding';
 
 const projectList = [
   {
@@ -52,7 +53,6 @@ const projectList = [
     path: "/square-root",
     element: <SquareRootB />,
   },
-  { name: "Grid Tool", path: "/grid-tool", element: <GridTool /> },
   {
     name: "Long Form Subtraction",
     path: "/long-form-subtraction",
@@ -128,11 +128,11 @@ const projectList = [
     path: "EuclideanGCD",
     element: <EuclideanGCD />,
   },
-  {
-    name: "LinkedListVisualizer",
-    path: "LinkedListVisualizer",
-    element: <LinkedListVisualizer />,
-  },
+  // {
+  //   name: "LinkedListVisualizer",
+  //   path: "LinkedListVisualizer",
+  //   element: <LinkedListVisualizer />,
+  // },
   {
     name: "RhythmTypingTrainer",
     path: "RhythmTypingTrainer",
@@ -143,11 +143,11 @@ const projectList = [
     path: "QuicksortComponent",
     element: <QuicksortVisualizer />,
   },
-  {
-    name: "QSTree",
-    path: "QSTree",
-    element: <QSTree />,
-  },
+  // {
+  //   name: "QSTree",
+  //   path: "QSTree",
+  //   element: <QSTree />,
+  // },
   {
     name: "QSTree Dynamic With correct spacing",
     path: "QSTree Dynamic With correct spacing",
@@ -158,6 +158,11 @@ const projectList = [
     path: "PathfindingVisualization",
     element: <PathfindingVisualization />,
   },
+  // {
+  //   name: "ForceGraphPathfinding",
+  //   path: "ForceGraphPathfinding",
+  //   element: <ForceGraphPathfinding />,
+  // },
   // {
   //   name: "QuickSortB",
   //   path: "QuickSortB",
@@ -216,6 +221,7 @@ const presentationList = [
     path: "MyTwoSum",
     element: <MyTwoSum />,
   }, 
+  { name: "Grid Tool", path: "/grid-tool", element: <GridTool /> },
 ];
 
 const Home: React.FC = () => (
@@ -289,12 +295,12 @@ const App: React.FC = () => {
           <li>
             <Link to="/">Home</Link>
           </li>
-          <li>
+          {/* <li>
             <button onClick={navigateToPreviousPresentation}>Previous Presentation</button>
           </li>
           <li>
             <button onClick={navigateToNextPresentation}>Next Presentation</button>
-          </li>
+          </li> */}
         </ul>
       </nav>
 
